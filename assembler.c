@@ -45,9 +45,9 @@ state fileIsValid(const char* fileName)
     /* Temporary string for storing single line from an input file */
     char tempLine[maxLineLength + 2];
     newLine *currentLine = (newLine *)malloc(sizeof(newLine));
-    symbolTableEntry *symbolTable;
-    codeImageEntry *codeImage;
-    dataImageEntry *dataImage;
+    symbolTable *head = NULL;
+    codeImageEntry *codeImage = NULL;
+    dataImage *dataImage = NULL;
 
     FILE *fileDescriptor = fopen(fileName, "r");
     if (!fileExtensionIsValid(fileName))
@@ -82,7 +82,7 @@ state fileIsValid(const char* fileName)
             }
             /* If line's length is valid, start the first pass process on that line. */
             else
-                singleLineFirstPass(currentLine, &instructionCounter, &dataCounter, &symbolTable, &codeImage, &dataImage);
+                singleLineFirstPass(currentLine, &instructionCounter, &dataCounter, &head, &codeImage, &dataImage);
             /* If in the first pass error was found, print the error, change file validation state.*/
             if( currentLine-> error != NULL)
             {

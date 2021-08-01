@@ -10,19 +10,19 @@
 #define maxLabelLength 31
 
 /* Characteristics of a signed integer consisting of one byte (including +/- sign) */
-#define max1ByteNumberLength 4
-#define min1ByteNumberValue -127
-#define max1ByteNumberValue 128
+#define max1ByteIntLength 4
+#define min1ByteIntVal -127
+#define max1ByteIntVal 128
 
 /* Characteristics of a signed integer consisting of two byte (including +/- sign) */
-#define max2ByteNumberLength 6
-#define min2ByteNumberValue -32768
-#define max2ByteNumberValue 32767
+#define max2BytesIntLength 6
+#define min2BytesIntVal -32768
+#define max2BytesIntVal 32767
 
 /* Characteristics of a signed integer consisting of four byte (including +/- sign) */
-#define max4ByteNumberLength 11
-#define min4ByteNumberValue -2147483648     /* (-2)^31 */
-#define max4ByteNumberValue 2147483647      /* 2^31 - 1 */
+#define max4BytesIntLength 11
+#define min4BytesIntVal -2147483648     /* (-2)^31 */
+#define max4BytesIntVal 2147483647      /* 2^31 - 1 */
 
 
 

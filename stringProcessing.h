@@ -8,8 +8,7 @@
 void skipSpaces(const char *lineContent, int *lineIndex);
 bool isAlphanumeric(const char *symbol);
 state fileExtensionIsValid(const char *fileName);
-bool haveSpacing(const char *lineContent, int *contentIndex);
-state checkForComma(newLine *line, char *content, int *index);
+state checkForComma(newLine *line, int *index, int numOfVariables);
 
 
 #endif //UNTITLED_UTILS_H

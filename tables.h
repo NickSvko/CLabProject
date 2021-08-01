@@ -6,14 +6,14 @@
 #include "instructions.h"
 
 /* Symbol table */
-typedef struct symbolTableEntry
+typedef struct symbolTable
 {
     char *name;
     long value;
     imageType type;
     reference referenceType;
-    struct symbolTableEntry *next;
-} symbolTableEntry;
+    struct symbolTable *next;
+} symbolTable;
 
 /* Code Image */
 typedef struct codeImageEntry
@@ -24,7 +24,7 @@ typedef struct codeImageEntry
 } codeImageEntry;
 
 /* Data Image */
-typedef struct dataImageEntry
+typedef struct dataImage
 {
     long address;
     directiveType entryType;
@@ -32,13 +32,13 @@ typedef struct dataImageEntry
     void *data;
     /* The size of the current data in bytes */
     unsigned int dataSize;
-    struct dataImageEntry *next;
-} dataImageEntry;
+    struct dataImage *next;
+} dataImage;
 
 
 
-void addToSymbolTable(symbolTableEntry **head, char *symbol, const long *address, imageType thisType);
-
+void addToSymbolTable(symbolTable **head, char *symbol, long address, imageType thisType);
+void addToDataImage(directiveType type, int numOfVariables, long *DC, void *dataArray, dataImage **table);
 
 
 #endif //UNTITLED_TABLES_H

@@ -8,12 +8,15 @@
 #include "labels.h"
 
 
-state singleLineFirstPass(newLine *line, long *instructionCounter, long *dataCounter, symbolTableEntry **symbolTable, codeImageEntry **codeImage, dataImageEntry **dataImage)
+state singleLineFirstPass(newLine *line, long *IC, long *DC, symbolTable **symbolTable, codeImageEntry **codeImage, dataImage **dataImage)
 {
+    int contentIndex = 0;
     char symbol[maxLineLength];
     bool labelSetting = FALSE;
     directiveWord directiveToken;
-    int contentIndex = 0;
+    int numOfDataVariables = 0;
+    void *dataArray = NULL;
+
 
     skipSpaces(line-> content, &contentIndex);
 
@@ -34,29 +37,25 @@ state singleLineFirstPass(newLine *line, long *instructionCounter, long *dataCou
             /* Checks if the directive word is '.dh'/ '.dw'/ '.db'/ '.asciz' */
             if(isDataStorageDirective(directiveToken.value))
             {
-                /* Checks if the line's syntax and parameters are valid, according to the directive type. */
-                if(directiveLineIsValid(line, directiveToken.value, &contentIndex))
+                /* Checks if the line's syntax and operands are valid, according to the directive type. */
+                if(dataStorageDirectiveLineIsValid(line, directiveToken.value, contentIndex, &numOfDataVariables, dataArray))
                 {
                     /* If there is a label in the start of the line, add it to the symbol table. */
                     if(labelSetting == TRUE)
-                        addToSymbolTable(symbolTable, symbol, dataCounter, data);
-                    /* After checking that the line is valid, add the given data to the data image. */
-//                    addToDataImage(line.content, directiveToken.value, &contentIndex, dataCounter, dataImage);
+                        addToSymbolTable(symbolTable, symbol, *DC, data);
+                    /* After checking that the line is valid, create an array that store the variables of the given data. */
+                    addToDataImage(directiveToken.value, numOfDataVariables, DC, dataArray, dataImage);
                 }
 
 
             }
         }
-
-
     }
 
     if(line-> error)
         return INVALID;
     return VALID;
 }
-
-
 
 
 void printError(newLine *line)

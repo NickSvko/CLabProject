@@ -39,15 +39,14 @@ state fileExtensionIsValid(const char *fileName)
     {
         if(fileName[i] == '.')
             startOfExtension = TRUE;
+
         if(startOfExtension == TRUE)
         {
             /* Copy input file extension to 'fileExtension' array */
             if(j < validExtLength)
-            {
-                fileExtension[j] = fileName[i];
-                j++;
-            }
-                /* If input file extension longer than ".as" */
+                fileExtension[j++] = fileName[i];
+
+            /* If input file extension longer than ".as" */
             else
             {
                 extensionState = INVALID;
@@ -61,32 +60,26 @@ state fileExtensionIsValid(const char *fileName)
     return extensionState;
 }
 
-/* Checks if there is a spacing between two following parameters. */
-bool haveSpacing(const char *lineContent, int *contentIndex)
+state checkForComma(newLine *line, int *index, int numOfVariables)
 {
-    int indexBeforeSpacing = *contentIndex;
-    /* if the index after spacing remain the same, than there is no spacing between the two following parameters. */
-    skipSpaces(lineContent, contentIndex);
-    if(indexBeforeSpacing == *contentIndex)
-        return FALSE;
-    return TRUE;
-}
-
-state checkForComma(newLine *line, char *content, int *index)
-{
-    /* if the current character is comma, check if the next character is also comma, or if the comma is between two operands */
-    if(content[*index] == ',')
+    skipSpaces(line->content, index);
+    /* if the current character is comma, checks for multiple commas or if comma located in invalid location. */
+    if(line->content[*index] == ',')
     {
-        index++;
-        if(content[*index] == ',')
+        (*index)++;
+        skipSpaces(line->content, index);
+
+        if(line->content[*index] == ',')
             line -> error = "multiple commas";
-            /* Checks whether we are before the first or after the last operand, i.e. not between two operands */
-        else if((index - 1) == 0 || content[*index] == '\0')
-            line->error = "There must be no comma before the first operand, and after the last operand.";
+
+        /* If the comma located before the first variable or after the last variable */
+        else if(numOfVariables == 0 || line->content[*index] == '\n')
+            line->error = "A comma appears before the first variable or after the last variable";
     }
-        /* if the current character is not a comma, check if we are between numbers */
-    else if((*index) != 0 && content[*index] != '\0')
+    /* If the current character is not a comma, check if we are between numbers */
+    else if(numOfVariables != 0 && line->content[*index] != '\n')
         line-> error = "Missing comma";
+
     if(line -> error)
         return INVALID;
     return VALID;

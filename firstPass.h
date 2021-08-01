@@ -4,7 +4,7 @@
 #include "tables.h"
 #include "lineHandling.h"
 
-state singleLineFirstPass(newLine *line, long *instructionCounter, long *dataCounter, symbolTableEntry **symbolTable, codeImageEntry **codeImage, dataImageEntry **dataImage);
+state singleLineFirstPass(newLine *line, long *IC, long *DC, symbolTable **symbolTable, codeImageEntry **codeImage, dataImage **dataImage);
 void printError(newLine *line);
 
 

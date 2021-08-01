@@ -2,7 +2,7 @@
 #include "string.h"
 #include "ctype.h" /* For isspace(), isalpha() */
 
-bool labelAlreadyDefined(char *label,symbolTableEntry *head)
+bool labelAlreadyDefined(char *label, symbolTable *head)
 {
     bool isAlreadyDefined = FALSE;
     while(head != NULL)
@@ -17,7 +17,7 @@ bool labelAlreadyDefined(char *label,symbolTableEntry *head)
     return isAlreadyDefined;
 }
 
-state labelIsValid(newLine *line, char *symbol, symbolTableEntry *symbolTable)
+state labelIsValid(newLine *line, char *symbol, symbolTable *symbolTable)
 {
     int i;
     int numberOfInstructions = sizeof(instructions) / sizeof(instructions[0]);
