@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "globals.h"
-#include "stringProcessing.h"
+
 
 typedef struct line
 {
@@ -17,5 +17,6 @@ void skipToTheNextLine(FILE *fileDescriptor);
 state lineLengthIsValid(const char *inputLine);
 bool emptyLine(const char *lineContent, int currentIndex);
 bool commentLine(const char *lineContent, int currentIndex);
+void printLineError(newLine *line);
 
 #endif //UNTITLED_LINEHANDLING_H

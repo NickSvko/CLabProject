@@ -1,9 +1,12 @@
+
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include "directives.h"
 #include "globals.h"
-#include "stdlib.h"
 
 /* Check If the current word in the give line is a directive definition, if true save the word */
-bool isDirectiveDefinition(const char *lineContent, directiveWord *directiveToken, int *contentIndex)
+bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex)
 {
     bool directiveDefinition = FALSE;
     int i;
@@ -15,8 +18,8 @@ bool isDirectiveDefinition(const char *lineContent, directiveWord *directiveToke
     if (lineContent[i] == '.')
     {
         /* Getting the directive name */
-        for (; lineContent[i] != ' ' && lineContent[i] != '\t' && lineContent[i] != '\n'; i++, j++)
-            directiveToken->name[j] = lineContent[i];
+        while(!isWhiteSpace(lineContent[i]))
+            directiveToken->name[j++] = lineContent[i++];
 
         /* Saves the directive name, updates the line content contentIndex, and 'directiveDefinition' state. */
         directiveToken->name[j] = '\0'; /* End of string */
@@ -28,7 +31,7 @@ bool isDirectiveDefinition(const char *lineContent, directiveWord *directiveToke
 
 bool directiveNameIsValid(newLine *line, directiveWord  *directiveToken)
 {
-    /* The total number of possible directive words */
+    /* The total number of the possible directive words */
     int numberOfDirectives = sizeof(directive) / sizeof(directive[0]);
     int i;
     /* Searches for a match between the given word and one of the directive words, if found stops the loop */
@@ -67,7 +70,7 @@ state dataStorageDirectiveLineIsValid(newLine *line, directiveType thisDirective
     else if (line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
         line->error = "No spacing between the directive word and the first operand";
 
-    /* If no error was found, exacuting Specific check of syntax and operands for directive line type .dh/.dw/.db */
+    /* If no error was found, executing Specific check of syntax and operands for directive line type .dh/.dw/.db */
     else if (thisDirective == DH || thisDirective == DW || thisDirective == DB)
         checkDTypeDirectiveLine(line, thisDirective, contentIndex, numOfVariables);
 
@@ -82,52 +85,21 @@ state dataStorageDirectiveLineIsValid(newLine *line, directiveType thisDirective
     return INVALID;
 }
 
-void variableIsValid(newLine *line, int *contentIndex, int *numOfVariables, int maxNumLength, int minVal, int maxVal)
-{
-    int i = 0;
-    int numValue;
-    char numString[maxNumLength + 1];
-
-    /* If the number start with '-' or '+' saves it in the string that represent the current number from the line. */
-    if(line->content[*contentIndex] == '-' || line->content[*contentIndex] == '+')
-        numString[i++] = line->content[(*contentIndex)++];
-
-    /* Extraction of an operand from a given line */
-    while(!isspace(line->content[*contentIndex]) && line->content[*contentIndex] != ',' && i <= maxNumLength)
-    {
-        /* If a charater isn't an integer. */
-        if(!isdigit(line->content[*contentIndex]))
-        {
-            line->error = "Invalid operand, operand must be an integer.";
-            break;
-        }
-        numString[i++] = line->content[(*contentIndex)++];
-    }
-    /* If no error was found while extracting the number from the line, check if the number is in the valid range */
-    if(!(line->error))
-    {
-        numValue = atoi(numString);
-        if(numValue > maxVal || numValue < minVal)
-            line->error = "Operand out of range";
-        else
-            (*numOfVariables)++;
-    }
-}
 
 void checkDTypeDirectiveLine(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables)
 {
     /* While no error is found, check line's validation. */
     while (!(line->error) && line->content[contentIndex] != '\n')
     {
-        /* If comma is missing or appearring in wrong place. */
+        /* If comma is missing or appearing in wrong place. */
         if(checkForComma(line, &contentIndex, *numOfVariables) == INVALID)
             break;
         if(thisDirective == DH)
-            variableIsValid(line, &contentIndex, numOfVariables, max1ByteIntLength, max1ByteIntVal, min1ByteIntVal);
+            checkInteger(line, &contentIndex, numOfVariables, max1ByteIntLength, max1ByteIntVal, min1ByteIntVal);
         else if(thisDirective == DW)
-            variableIsValid(line, &contentIndex, numOfVariables, max2BytesIntLength, max2BytesIntVal, min2BytesIntVal);
+            checkInteger(line, &contentIndex, numOfVariables, max2BytesIntLength, max2BytesIntVal, min2BytesIntVal);
         else if(thisDirective == DB)
-            variableIsValid(line, &contentIndex, numOfVariables, max4BytesIntLength, max4BytesIntVal, min4BytesIntVal);
+            checkInteger(line, &contentIndex, numOfVariables, max4BytesIntLength, max4BytesIntVal, min4BytesIntVal);
     }
 }
 
@@ -161,11 +133,6 @@ void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariable
 
 void createDataArray(directiveType type, void **dataArray, int numOfVariables, const char *content, int index)
 {
-    int i = 0;
-    int arrayIndex = 0;
-    int numValue;
-    char numString[max4BytesIntLength]; /* Max length of any valid number from input */
-
     if(type == DB || type == ASCIZ)
         *dataArray = malloc(sizeof(char) * numOfVariables);
     if(type == DH)
@@ -195,17 +162,17 @@ void createDTypeArray(const char *content, int index, directiveType type, void *
 
         /* Scans the number encountered */
         while(!isspace(content[index]) && content[index] != ',')
-            numString[i++] = content[index++];
+            numString[i++] = (char)(content[index++] + '0');
 
-        /* If an number has been found */
+        /* If a number has been found */
         if(i != 0)
         {
             numValue = atoi(numString);
 
             if(type == DB)
-                *(char *)dataArray[arrayIndex++] = numValue;
+                *(char *)dataArray[arrayIndex++] = (char)numValue;
             else if(type == DH)
-                *(short *)dataArray[arrayIndex++] = numValue;
+                *(short *)dataArray[arrayIndex++] = (short)numValue;
             else if(type == DW)
                 *(int *)dataArray[arrayIndex++] = numValue;
         }
@@ -215,15 +182,14 @@ void createDTypeArray(const char *content, int index, directiveType type, void *
 
 void createAscizTypeArray(const char *content,int index,char *dataArray)
 {
-    int i = 0;
     int arrayIndex = 0;
 
     /* Progress until encounter the beginning of the string */
     for(; content[index] != '"';index++);
-
+    index++;
     /* Progress until encounter the end of the string */
-    for(i = 0; content[index] != '"'; index++)
-        dataArray[arrayIndex++] = content[index++];
+    while(content[index] != '"')
+        dataArray[arrayIndex++] = (char)(content[index++] + '0');
 
     dataArray[arrayIndex] = '\0'; /* End of string */
 }

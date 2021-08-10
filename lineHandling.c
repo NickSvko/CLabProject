@@ -1,5 +1,8 @@
-#include "lineHandling.h"
+
 #include <string.h>
+#include "lineHandling.h"
+#include "stringProcessing.h"
+
 
 void skipToTheNextLine(FILE *fileDescriptor)
 {
@@ -38,4 +41,9 @@ bool commentLine(const char *lineContent, int currentIndex)
     if(lineContent[currentIndex] == ';')
         return TRUE;
     return FALSE;
+}
+
+void printLineError(newLine *line)
+{
+    printf("Error. file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
 }
