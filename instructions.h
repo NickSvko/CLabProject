@@ -28,7 +28,7 @@ typedef struct typeRInstruction
 /* Representation of I-type instructionWord structure */
 typedef struct typeIInstruction
 {
-    /* Fixed/immediate value, bits: 15-0 */
+    /* Fixed/immediate address, bits: 15-0 */
     signed int immed: 16;
     /* Second register, bits: 20-16 */
     unsigned int rt: 5;
@@ -56,6 +56,8 @@ typedef struct instructionWord
     unsigned int opcode;
     unsigned int funct;
     instructionType type;
+    /* The address of the instruction */
+    long address;
 } instructionWord;
 
 
@@ -101,6 +103,8 @@ bool instructionWordIsValid(newLine *line, instructionWord *instructionToken, in
 state findInstruction(instructionWord *instructionToken);
 void checkOperandsSyntax(newLine *line, unsigned int opcode, int contentIndex);
 state instructionLineIsValid(newLine *line, instructionWord instructionToken, int contentIndex);
+void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken);
+state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address);
 
 
 #endif //UNTITLED_INSTRUCTIONS_H

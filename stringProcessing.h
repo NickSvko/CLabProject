@@ -17,5 +17,6 @@ int getRegister(const char *content, int *index);
 int getNumber(const char *content, int *index);
 bool isRegister(const char *content, int index);
 bool isWhiteSpace(char thisChar);
+char *changeFileExtension(char *str, char *extension);
 
 #endif //UNTITLED_UTILS_H

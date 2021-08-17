@@ -135,9 +135,63 @@ void checkOperandsSyntax(newLine *line, unsigned int opcode, int contentIndex)
         }
         if(!(line->error))
             checkOperandsAmount(line, opcode, numOfScannedOperands);
-
     }
 }
+
+/* get the opcode and type of the instruction that appears in the current line */
+void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken)
+{
+    int i = 0;
+
+    skipSpaces(content, contentIndex);
+
+    /* Copies the instruction */
+    while(!isWhiteSpace(content[*contentIndex]))
+        instructionToken->name[i++] = content[(*contentIndex)++];
+
+    /* Finds the current instruction and save its opcode and type in the instructionToken */
+    findInstruction(instructionToken);
+}
+
+
+state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address)
+{
+    if(type == I)
+    {
+        /* The label can't be defined as external in type 'I' instruction */
+        if(label->isExtern)
+            line->error = "Label can't be defined as external in a conditional branching instruction";
+        else
+        {
+            /* The 'immed' field contains the distance between the label and the instruction */
+            (*address) = label->address - instructionAddress;
+            /* The address must be in the 16-bit range */
+            if((*address) < min2BytesIntVal || (*address) > max2BytesIntVal)
+                line->error = "The label address is not in the correct range for type 'I' instruction";
+        }
+    }
+
+    if(type == J)
+    {
+        /* If label set as external, labels address unknown */
+        if(label->isExtern)
+            (*address) = 0;
+        else
+        {
+            /* In 'J' type instruction, the 'distance' represent the required label's address */
+            (*address) = label->address;
+            /* The address must be in the 25-bit range */
+            if((*address) < min25BitsIntVal || (*address) > max25bitsIntVal)
+                line->error = "The label address is not in the correct range for type 'J' instruction";
+        }
+    }
+
+    if(line->error)
+        return VALID;
+    return INVALID;
+}
+
+
 
 
 

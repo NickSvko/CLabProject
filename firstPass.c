@@ -19,29 +19,31 @@ void singleLineFirstPass(newLine *line, long *IC, long *DC, symbolTable *symbolT
     int numOfDataVariables = 0;
     void *dataArray = NULL;
 
-
-    skipSpaces(line-> content, &contentIndex);
+    skipSpaces(line->content, &contentIndex);
 
     /* If  the current line in comment or an empty line, skip line. */
-    if(emptyLine(line-> content, contentIndex) || commentLine(line-> content, contentIndex))
+    if(emptyLine(line->content, contentIndex) || commentLine(line-> content, contentIndex))
         return;
 
     /* If the first word in line is a valid label definition turns on 'labelSetting' flag. */
     if(symbolIsLabelDefinition(line->content, symbol, &contentIndex) && labelIsValid(line, symbol))
             labelSetting = TRUE;
 
+    /* If the current line is empty after label definition */
+    if(labelSetting == TRUE && emptyLine(line->content, contentIndex))
+        line->error = "Missing instruction/directive after label definition";
 
     /* If no error was found yet and the current word is a directive word, saves the word. */
     if(!(line-> error) && isDirective(line->content, &directiveToken, &contentIndex))
     {
-        /* Checks if the directive word is valid, if so, updates its value(saved mnemonic word). */
+        /* Checks if the directive word is valid, if so, updates its address(saved mnemonic word). */
         if(directiveNameIsValid(line, &directiveToken))
         {
             /* Checks if the directive word is '.dh'/ '.dw'/ '.db'/ '.asciz' */
             if(isDataStorageDirective(directiveToken.value))
             {
                 /* Checks if the line's syntax and operands are valid according to the directive type. */
-                if(dataStorageDirectiveLineIsValid(line, directiveToken.value, contentIndex, &numOfDataVariables, dataArray))
+                if(dataStorageDirectiveLineIsValid(line, directiveToken.value, contentIndex, &numOfDataVariables, &dataArray))
                 {
                     /* If there is a label in the start of the line, add it to the symbol table,if so, create data array */
                     if(labelSetting == TRUE)

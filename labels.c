@@ -3,6 +3,8 @@
 #include <ctype.h> /* For isspace(), isalpha() */
 #include "labels.h"
 #include "stringProcessing.h"
+#include "tables.h"
+
 bool labelIsDefined(char *label, symbolTableEntry *table, newLine *line, imageType type)
 {
     bool isDefined = FALSE;
@@ -101,5 +103,33 @@ void skipLabelDefinition(const char *content, int *index)
         (*index) = i;
     }
 }
+
+/* Finds and extracts the label that appears on the current line */
+void extractLabelFromLine(char *symbol, const char *content, int index)
+{
+    /* Advance until encounter the beginning of a label */
+    for(; !isalpha(content[index]); index++);
+
+    getLabelName(content, &index, symbol);
+}
+
+state getLabelFromTable(newLine *line, char *symbol, symbolTable *label, symbolTable table)
+{
+    symbolTable currentEntry;
+
+    for(currentEntry = table; currentEntry != NULL; currentEntry = currentEntry->next)
+    {
+        if(strcmp(symbol, currentEntry->name) == 0)
+        {
+            (*label) = currentEntry;
+            return SUCCEEDED;
+        }
+    }
+    /* If failed to find the required label */
+    line->error = "The required label wasn't found";
+    return FAILED;
+}
+
+
 
 

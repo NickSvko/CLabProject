@@ -45,5 +45,5 @@ bool commentLine(const char *lineContent, int currentIndex)
 
 void printLineError(newLine *line)
 {
-    printf("Error. file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
+    fprintf(stderr,"Error. file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
 }

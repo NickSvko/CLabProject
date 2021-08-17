@@ -10,6 +10,8 @@ state labelIsValid(newLine *line, char *label);
 bool symbolIsLabelDefinition(const char *lineContent, char *symbol, int *index);
 void getLabelName(const char *content, int *index, char *label);
 void skipLabelDefinition(const char *content, int *index);
+void extractLabelFromLine(char *symbol, const char *content, int index);
+state getLabelFromTable(newLine *line, char *symbol, symbolTable *label, symbolTable table);
 
 
 #endif //UNTITLED_LABELS_H

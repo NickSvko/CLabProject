@@ -5,7 +5,7 @@
 /* Maximum line length from source file - not including '\n' */
 #define maxLineLength 80
 
-/* Initial the value of IC(instruction counter) */
+/* Initial the address of IC(instruction counter) */
 #define ICInitialValue 100
 #define maxLabelLength 31
 
@@ -25,8 +25,8 @@
 #define max4BytesIntVal 2147483647      /* 2^31 - 1 */
 
 /* Characteristics of a signed integer consisting of 25bits (including +/- sign) */
-#define max16bitsIntVal 16777215
-#define min16BitsIntVal (-16777216)
+#define max25bitsIntVal 16777215
+#define min25BitsIntVal (-16777216)
 
 
 

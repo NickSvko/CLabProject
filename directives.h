@@ -30,7 +30,7 @@ state dataStorageDirectiveLineIsValid(newLine *line, directiveType thisDirective
 void checkDTypeDirectiveLine(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables);
 void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariables);
 void createDataArray(directiveType type, void **dataArray, int numOfVariables, const char *content, int index);
-void createDTypeArray(const char *content, int index, directiveType type, void **dataArray);
+void createDTypeArray(const char *content, int index, directiveType type, void *dataArray);
 void createAscizTypeArray(const char *content,int index,char *dataArray);
 
 

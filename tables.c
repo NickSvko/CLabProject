@@ -1,20 +1,20 @@
 
-#include <stdlib.h>
 #include <string.h>
 #include "globals.h"
 #include "tables.h"
 #include "directives.h"
+#include "general.h"
 
 void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType thisType)
 {
     symbolTable newEntry, tempEntry;
 
-    newEntry = (symbolTable)malloc(sizeof(symbolTableEntry));
-    char *labelName = (char *)malloc(strlen(symbol) + 1);
+    newEntry = (symbolTable)mallocWithCheck(sizeof(symbolTableEntry));
+    char *labelName = (char *)mallocWithCheck(strlen(symbol) + 1);
 
     strcpy(labelName, symbol);
     newEntry -> name = labelName;
-    newEntry -> value = address;
+    newEntry -> address = address;
     newEntry -> next = NULL;
 
     if(thisType == entry)
@@ -30,11 +30,8 @@ void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType 
         (*table) = newEntry;
     else
     {
-        tempEntry = (*table);
-
-        while(tempEntry -> next != NULL)
-            tempEntry = tempEntry -> next;
-
+        /* Defines the new node to be the last */
+        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
         tempEntry -> next = newEntry;
     }
 }
@@ -43,7 +40,7 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
 {
     int sizeofVariable;
     dataImageTable newEntry, tempEntry;
-    newEntry = malloc(sizeof(dataImageEntry));
+    newEntry = mallocWithCheck(sizeof(dataImageEntry));
 
     if(type == DB || type == ASCIZ)
         sizeofVariable = sizeof(char);
@@ -53,10 +50,11 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
         sizeofVariable = sizeof(int);
 
     newEntry -> entryType = type;
+    newEntry -> numOfVariables = numOfVariables;
     newEntry -> data = dataArray;
     newEntry -> address = *DC;
     newEntry -> dataSize = sizeofVariable * numOfVariables;
-    /* Increases the value of DC according to the data obtained  */
+    /* Increases the address of DC according to the data obtained  */
     (*DC) += newEntry->dataSize;
     newEntry -> next = NULL;
 
@@ -65,11 +63,8 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
         (*table) = newEntry;
     else
     {
-        tempEntry = (*table);
-
-        while(tempEntry -> next != NULL)
-            tempEntry = tempEntry -> next;
-
+        /* Defines the new node to be the last */
+        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
         tempEntry -> next = newEntry;
     }
 }
@@ -78,9 +73,10 @@ void addToCodeImage(const char *content, int index, instructionWord instructionT
 {
     codeImageTable newEntry, tempEntry;
 
-    newEntry = malloc(sizeof(codeImageEntry));
-    enterCodeData(content, index, instructionToken,*IC, newEntry);
+    newEntry = mallocWithCheck(sizeof(codeImageEntry));
+    getCodeData(content, index, instructionToken, newEntry);
     newEntry -> address = (int)*IC;
+    newEntry -> type = instructionToken.type;
     newEntry -> next = NULL;
     (*IC) += 4;
 
@@ -89,16 +85,39 @@ void addToCodeImage(const char *content, int index, instructionWord instructionT
         (*table) = newEntry;
     else
     {
-        tempEntry = (*table);
-
-        while(tempEntry -> next != NULL)
-            tempEntry = tempEntry -> next;
-
+        /* Defines the new node to be the last */
+        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
         tempEntry -> next = newEntry;
     }
 }
 
-void enterCodeData(const char *content, int index, instructionWord instructionToken, long IC, codeImageTable newEntry)
+
+void addToAttributesTable(char *name, imageType type, long address, attributesTable *table)
+{
+    attributesTable newEntry, tempEntry;
+
+    newEntry = (attributesTable)mallocWithCheck(sizeof(attributesTableEntry));
+
+    char *currentName = (char *)mallocWithCheck(strlen(name) + 1);
+    strcpy(currentName, name);
+
+    newEntry -> name = currentName;
+    newEntry -> type = type;
+    newEntry -> address = address;
+    newEntry -> next = NULL;
+
+    /* If the table is empty */
+    if((*table) == NULL)
+        (*table) = newEntry;
+    else
+    {
+        /* Defines the new node to be the last */
+        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
+        tempEntry -> next = newEntry;
+    }
+}
+
+void getCodeData(const char *content, int index, instructionWord instructionToken, codeImageTable newEntry)
 {
     if(instructionToken.type == R)
     {
@@ -119,10 +138,8 @@ void enterCodeData(const char *content, int index, instructionWord instructionTo
         newEntry -> data -> typeI -> opcode = instructionToken.opcode;
         newEntry -> data -> typeI -> rs = getRegister(content,&index);
 
-        /* If conditional branching instruction */
-        if(instructionToken.opcode >= 15 && instructionToken.opcode <= 18)
-            newEntry -> data -> typeI -> immed = (int)IC;
-        else
+        /* If it's a conditional branching instruction */
+        if(!(instructionToken.opcode >= 15 && instructionToken.opcode <= 18))
             newEntry -> data -> typeI -> immed = getNumber(content, &index);
 
         newEntry -> data -> typeI -> rt = getRegister(content, &index);
@@ -131,17 +148,14 @@ void enterCodeData(const char *content, int index, instructionWord instructionTo
     {
         newEntry -> data -> typeJ -> opcode = instructionToken.opcode;
 
-        /* If 'jump' instruction with register operand */
+        /* If it's 'jump' instruction with register operand */
         if(instructionToken.opcode == 30 && isRegister(content,index))
         {
             newEntry -> data -> typeJ -> reg = 1;
             newEntry -> data -> typeJ -> address = getRegister(content,&index);
         }
         else
-        {
             newEntry -> data -> typeJ -> reg = 0;
-            newEntry -> data -> typeJ -> address = 0;
-        }
     }
 }
 
@@ -151,7 +165,7 @@ void updateSymbolsValue(symbolTable table, long ICF,imageType type)
     for(currentEntry = table; currentEntry != NULL; currentEntry = currentEntry->next)
     {
         if(currentEntry->type == type)
-            currentEntry->value += ICF;
+            currentEntry->address += ICF;
     }
 }
 
@@ -161,4 +175,17 @@ void updateDataImageAddresses(dataImageTable table, long ICF)
     for(currentEntry = table; currentEntry != NULL; currentEntry = currentEntry->next)
             currentEntry->address += ICF;
 }
+
+void addEntrySymbolsToTable(attributesTable *attributesHead, symbolTable symbolHead)
+{
+    symbolTable symbolEntry = symbolHead;
+
+    for(; symbolEntry != NULL; symbolEntry = symbolEntry->next)
+    {
+        if(symbolEntry->isEntry)
+            addToAttributesTable(symbolEntry->name, entry, symbolEntry->address, attributesHead);
+    }
+}
+
+
 

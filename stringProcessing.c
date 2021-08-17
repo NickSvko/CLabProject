@@ -4,6 +4,7 @@
 #include <string.h>
 #include "stringProcessing.h"
 
+
 /* Finds the index of next char that is not space or tab. */
 void skipSpaces(const char *lineContent,int *lineIndex)
 {
@@ -233,5 +234,13 @@ bool isWhiteSpace(char thisChar)
     return FALSE;
 }
 
+char *changeFileExtension(char *str, char *extension)
+{
+        char *temp, *fileName;
+        temp = str + 2; /* Copy str without "./" */
+        fileName = strtok(temp, "."); /* Copy the filename without the extension */
+        strcat(fileName, extension); /* Adding the desired extension */
+        return fileName;
+}
 
 

@@ -12,11 +12,11 @@ typedef enum symbolType {code, data, entry, external} imageType;
 
 typedef struct symbolTableEntry *symbolTable;
 
-/* Symbol table */
+/* Symbol table entry */
 typedef struct symbolTableEntry
 {
     char *name;
-    long value;
+    long address;
     imageType type;
     bool isEntry;
     bool isExtern;
@@ -30,6 +30,7 @@ typedef struct codeImageEntry *codeImageTable;
 typedef struct codeImageEntry
 {
     int address;
+    instructionType type;
     codeType *data;
     struct codeImageEntry *next;
 } codeImageEntry;
@@ -41,6 +42,7 @@ typedef struct dataImageEntry
 {
     long address;
     directiveType entryType;
+    unsigned int numOfVariables;
     /* The given data to store */
     void *data;
     /* The size of the current data in bytes */
@@ -48,14 +50,29 @@ typedef struct dataImageEntry
     struct dataImageEntry *next;
 } dataImageEntry;
 
+typedef struct attributesTableEntry *attributesTable;
+
+typedef struct attributesTableEntry
+{
+    /* Attribute type - entry/extern */
+    imageType type;
+    /* The name of the label */
+    char *name;
+    /* The address of the label(if entry) or of the instruction(if) extern */
+    long address;
+    struct attributesTableEntry *next;
+} attributesTableEntry;
+
 
 
 void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType thisType);
 void addToDataImage(directiveType type, int numOfVariables, long *DC, void *dataArray, dataImageTable *table);
 void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeImageTable *table, long *IC);
-void enterCodeData(const char *content, int index, instructionWord instructionToken, long IC, codeImageTable newEntry);
+void getCodeData(const char *content, int index, instructionWord instructionToken, codeImageTable newEntry);
 void updateSymbolsValue(symbolTable table, long ICF,imageType type);
 void updateDataImageAddresses(dataImageTable table, long ICF);
+void addToAttributesTable(char *name, imageType type, long address, attributesTable *table);
+void addEntrySymbolsToTable(attributesTable *attributesHead, symbolTable symbolHead);
 
 
 #endif //UNTITLED_TABLES_H

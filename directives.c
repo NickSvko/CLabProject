@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "directives.h"
 #include "globals.h"
+#include "general.h"
 
 /* Check If the current word in the give line is a directive definition, if true save the word */
 bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex)
@@ -134,20 +135,20 @@ void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariable
 void createDataArray(directiveType type, void **dataArray, int numOfVariables, const char *content, int index)
 {
     if(type == DB || type == ASCIZ)
-        *dataArray = malloc(sizeof(char) * numOfVariables);
+        *dataArray = mallocWithCheck(sizeof(char) * numOfVariables);
     if(type == DH)
-        *dataArray = malloc(sizeof(short) * numOfVariables);
+        *dataArray = mallocWithCheck(sizeof(short) * numOfVariables);
     if(type == DW)
-        *dataArray = malloc(sizeof(int) * numOfVariables);
+        *dataArray = mallocWithCheck(sizeof(int) * numOfVariables);
 
     if(type == DH || type == DB || type == DW)
-        createDTypeArray(content, index, type, dataArray);
+        createDTypeArray(content, index, type, *dataArray);
 
     else if(type == ASCIZ)
         createAscizTypeArray(content, index, *dataArray);
 }
 
-void createDTypeArray(const char *content, int index, directiveType type, void **dataArray)
+void createDTypeArray(const char *content, int index, directiveType type, void *dataArray)
 {
     int i = 0;
     int arrayIndex = 0;
@@ -170,11 +171,11 @@ void createDTypeArray(const char *content, int index, directiveType type, void *
             numValue = atoi(numString);
 
             if(type == DB)
-                *(char *)dataArray[arrayIndex++] = (char)numValue;
+                ((char *)dataArray)[arrayIndex++] = (char)numValue;
             else if(type == DH)
-                *(short *)dataArray[arrayIndex++] = (short)numValue;
+                ((short *)dataArray)[arrayIndex++] = (short)numValue;
             else if(type == DW)
-                *(int *)dataArray[arrayIndex++] = numValue;
+                ((int *)dataArray)[arrayIndex++] = numValue;
         }
         i = 0;
     }
