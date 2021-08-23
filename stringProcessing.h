@@ -8,7 +8,6 @@
 
 void skipSpaces(const char *lineContent, int *lineIndex);
 bool isAlphanumeric(const char *symbol);
-state fileExtensionIsValid(const char *fileName);
 state checkForComma(newLine *line, int *index, int numOfVariables);
 void checkInteger(newLine *line, int *contentIndex, int *numOfVariables, int maxNumLength, int minVal, int maxVal);
 void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands);
@@ -17,6 +16,9 @@ int getRegister(const char *content, int *index);
 int getNumber(const char *content, int *index);
 bool isRegister(const char *content, int index);
 bool isWhiteSpace(char thisChar);
-char *changeFileExtension(char *str, char *extension);
+char *getFileFullName(char *fileName, char *fileExtension);
+void scanRegister(const char *content, int *contentIndex, char *registerString, int *registerNum);
+bool registerIsValid(char *registerString, int registerNum);
+
 
 #endif //UNTITLED_UTILS_H

@@ -1,9 +1,9 @@
 
 #include <string.h>
-#include "globals.h"
 #include "tables.h"
-#include "directives.h"
 #include "general.h"
+#include "stringProcessing.h"
+#include "structs.h"
 
 void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType thisType)
 {
@@ -36,10 +36,10 @@ void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType 
     }
 }
 
-void addToDataImage(directiveType type, int numOfVariables, long *DC, void *dataArray, dataImageTable *table)
+void addToDataImage(directiveType type, int numOfVariables, long *DC, void *dataArray, dataTable *table)
 {
     int sizeofVariable;
-    dataImageTable newEntry, tempEntry;
+    dataTable newEntry, tempEntry;
     newEntry = mallocWithCheck(sizeof(dataImageEntry));
 
     if(type == DB || type == ASCIZ)
@@ -69,9 +69,9 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
     }
 }
 
-void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeImageTable *table, long *IC)
+void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeTable *table, long *IC)
 {
-    codeImageTable newEntry, tempEntry;
+    codeTable newEntry, tempEntry;
 
     newEntry = mallocWithCheck(sizeof(codeImageEntry));
     getCodeData(content, index, instructionToken, newEntry);
@@ -117,7 +117,7 @@ void addToAttributesTable(char *name, imageType type, long address, attributesTa
     }
 }
 
-void getCodeData(const char *content, int index, instructionWord instructionToken, codeImageTable newEntry)
+void getCodeData(const char *content, int index, instructionWord instructionToken, codeTable newEntry)
 {
     if(instructionToken.type == R)
     {
@@ -169,9 +169,9 @@ void updateSymbolsValue(symbolTable table, long ICF,imageType type)
     }
 }
 
-void updateDataImageAddresses(dataImageTable table, long ICF)
+void updateDataImageAddresses(dataTable table, long ICF)
 {
-    dataImageTable currentEntry;
+    dataTable currentEntry;
     for(currentEntry = table; currentEntry != NULL; currentEntry = currentEntry->next)
             currentEntry->address += ICF;
 }

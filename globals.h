@@ -7,7 +7,9 @@
 
 /* Initial the address of IC(instruction counter) */
 #define ICInitialValue 100
+
 #define maxLabelLength 31
+#define maxRegisterLength 2
 
 /* Characteristics of a signed integer consisting of one byte (including +/- sign) */
 #define max1ByteIntLength 4

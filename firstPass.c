@@ -1,88 +1,61 @@
-#include <stdio.h>
-#include "firstPass.h"
-#include "globals.h"
+
 #include "stringProcessing.h"
 #include "directives.h"
-#include "tables.h"
 #include "lineHandling.h"
 #include "labels.h"
 #include "instructions.h"
+#include "structs.h"
 
 
-void singleLineFirstPass(newLine *line, long *IC, long *DC, symbolTable *symbolTable, codeImageTable *codeImage, dataImageTable *dataImage)
+state lineFirstPass(newLine *line, long *IC, long *DC, symbolTable *symTable, codeTable *codeImage, dataTable *dataImage)
 {
     int contentIndex = 0;
     char symbol[maxLineLength];
     bool labelSetting = FALSE;
     directiveWord directiveToken;
-    instructionWord instructionToken;
-    int numOfDataVariables = 0;
-    void *dataArray = NULL;
 
     skipSpaces(line->content, &contentIndex);
 
     /* If  the current line in comment or an empty line, skip line. */
     if(emptyLine(line->content, contentIndex) || commentLine(line-> content, contentIndex))
-        return;
+        return SUCCEEDED;
 
-    /* If the first word in line is a valid label definition turns on 'labelSetting' flag. */
-    if(symbolIsLabelDefinition(line->content, symbol, &contentIndex) && labelIsValid(line, symbol))
-            labelSetting = TRUE;
+    checkForLabelSetting(line, symbol, &contentIndex, &labelSetting);
 
-    /* If the current line is empty after label definition */
-    if(labelSetting == TRUE && emptyLine(line->content, contentIndex))
-        line->error = "Missing instruction/directive after label definition";
-
-    /* If no error was found yet and the current word is a directive word, saves the word. */
+    /* If no error was found and the current word is a directive word, saves the word. */
     if(!(line-> error) && isDirective(line->content, &directiveToken, &contentIndex))
-    {
-        /* Checks if the directive word is valid, if so, updates its address(saved mnemonic word). */
-        if(directiveNameIsValid(line, &directiveToken))
-        {
-            /* Checks if the directive word is '.dh'/ '.dw'/ '.db'/ '.asciz' */
-            if(isDataStorageDirective(directiveToken.value))
-            {
-                /* Checks if the line's syntax and operands are valid according to the directive type. */
-                if(dataStorageDirectiveLineIsValid(line, directiveToken.value, contentIndex, &numOfDataVariables, &dataArray))
-                {
-                    /* If there is a label in the start of the line, add it to the symbol table,if so, create data array */
-                    if(labelSetting == TRUE)
-                    {
-                        if(!labelIsDefined(symbol, *symbolTable, line, data))
-                            addToSymbolTable(symbolTable, symbol, *DC, data);
-                    }
-                    /* Adds the received data to the data image linked list and continues to the next line.*/
-                    addToDataImage(directiveToken.value, numOfDataVariables, DC, dataArray, dataImage);
-                    return;
-                }
-            }
-            /* Continues to the next line (this directive will be handled in the second transition)  */
-            else if(directiveToken.value == ENTRY)
-                return;
+        processDirective(&directiveToken, labelSetting, line, &contentIndex, DC, symTable, dataImage, symbol);
 
-            else if(directiveToken.value == EXTERN)
-            {
-                getLabelName(line->content, &contentIndex, symbol);
+    /* If it's not a directive then it's necessarily an instruction, check if the current line is a valid instruction */
+    else
+        processInstruction(line, &contentIndex, labelSetting, symbol, symTable, codeImage, IC);
 
-                if(labelIsValid(line,symbol) && !labelIsDefined(symbol, *symbolTable, line, external))
-                {
-                    addToSymbolTable(symbolTable, symbol, 0, external);
-                    return;
-                }
-            }
-        }
-    }
-    /* If it's not a directive then it's necessarily an instruction, check if the current word is a valid instruction */
-    if(!(line->error) && instructionWordIsValid(line, &instructionToken, &contentIndex))
-    {
-        if(labelSetting && labelIsValid(line,symbol) && !labelIsDefined(symbol, *symbolTable, line, code))
-            addToSymbolTable(symbolTable, symbol, *IC, code);
-
-        if(!(line->error) && instructionLineIsValid(line, instructionToken, contentIndex) == VALID)
-            addToCodeImage(line->content, contentIndex, instructionToken, codeImage, IC);
-    }
+    if(line->error)
+        return FAILED;
+    return SUCCEEDED;
 }
 
+state firstPass(newLine *line, long *IC, long *DC, symbolTable *symTab, codeTable *codeImage, dataTable *dataImage, FILE *fd)
+{
+    /* Temporary string for storing single line from an input file */
+    char tempLine[maxLineLength + 2];
+    state process = SUCCEEDED;
 
+    /* Check validation of each line from the input file, until reach end of file. */
+    for(line->number = 1; fgets(tempLine, maxLineLength + 2, fd) != NULL; line->number++)
+    {
+        line->content = tempLine;
+        line->error = NULL;
 
+        if(lineLength(line->content, line) == INVALID)
+            skipToTheNextLine(fd);
+
+        else if(lineFirstPass(line, IC, DC, symTab, codeImage, dataImage) == FAILED)
+        {
+            printLineError(line);
+            process = FAILED;
+        }
+    }
+    return process;
+}
 

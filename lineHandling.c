@@ -1,7 +1,8 @@
 
 #include <string.h>
-#include "lineHandling.h"
+#include <stdlib.h>
 #include "stringProcessing.h"
+#include "general.h"
 
 
 void skipToTheNextLine(FILE *fileDescriptor)
@@ -19,11 +20,14 @@ void skipToTheNextLine(FILE *fileDescriptor)
  * @param A single line from the input file.
  * @return The state of the line length, valid/invalid.
  */
-state lineLengthIsValid(const char *inputLine)
+state lineLength(const char *inputLine, newLine *line)
 {
     state lineLengthState = VALID;
     if(strchr(inputLine,'\n') == NULL)
+    {
         lineLengthState = INVALID;
+        line->error = addError("line is too long");
+    }
     return lineLengthState;
 }
 
@@ -46,4 +50,5 @@ bool commentLine(const char *lineContent, int currentIndex)
 void printLineError(newLine *line)
 {
     fprintf(stderr,"Error. file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
+    free(line->error);
 }

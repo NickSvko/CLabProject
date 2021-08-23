@@ -1,9 +1,11 @@
 
 #include <string.h>
-#include <ctype.h> /* For isspace(), isalpha() */
-#include "labels.h"
+#include <ctype.h> /* For isalpha() */
+//#include "labels.h"
 #include "stringProcessing.h"
 #include "tables.h"
+#include "directives.h"
+#include "general.h"
 
 bool labelIsDefined(char *label, symbolTableEntry *table, newLine *line, imageType type)
 {
@@ -130,6 +132,15 @@ state getLabelFromTable(newLine *line, char *symbol, symbolTable *label, symbolT
     return FAILED;
 }
 
+void checkForLabelSetting(newLine *line, char *symbol, int *contentIndex, bool *labelSetting)
+{
+    /* If the first word in line is a valid label definition turns on 'labelSetting' flag. */
+    if(symbolIsLabelDefinition(line->content, symbol, contentIndex) && labelIsValid(line, symbol))
+        *labelSetting = TRUE;
 
+    /* If the current line is empty after label definition */
+    if(*labelSetting == TRUE && emptyLine(line->content, *contentIndex))
+        line->error = addError("Missing instruction/directive after label definition");
+}
 
 

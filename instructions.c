@@ -1,36 +1,33 @@
 
 #include <string.h>
-#include "instructions.h"
-#include "globals.h"
+
+
 #include "stringProcessing.h"
 #include "labels.h"
+#include "general.h"
+
 
 
 bool instructionWordIsValid(newLine *line, instructionWord *instructionToken, int *index)
 {
-    bool isValid = TRUE;
     int i = 0;
 
     skipSpaces(line->content, index);
 
-    /* Copies the current word */
-    while(!isWhiteSpace(line->content[*index]) && i < maxInstructionLength)
+    while(!isWhiteSpace(line->content[*index]) && i < maxInstructionLength) /* Copies the current word */
         instructionToken->name[i++] = line->content[(*index)++];
 
-    /* If the current word is too long to be an instruction */
-    if(i == maxInstructionLength)
-    {
-        line->error = "Invalid instruction word";
-        isValid = FALSE;
-    }
+    if(i == maxInstructionLength)   /* If the current word is too long to be an instruction */
+        line->error = addError("Invalid instruction word");
+
     else { instructionToken->name[i] = '\0'; } /* End of string */
 
     if(!(line->error) && findInstruction(instructionToken) == INVALID)
-    {
-        line->error = "Invalid instruction word";
-        isValid = FALSE;
-    }
-    return isValid;
+        line->error = addError("Invalid instruction word");
+
+    if(line->error)
+        return FALSE;
+    return TRUE;
 }
 
 /*
@@ -40,8 +37,8 @@ bool instructionWordIsValid(newLine *line, instructionWord *instructionToken, in
 state findInstruction(instructionWord *instructionToken)
 {
     /* The total number of the possible instruction words */
-    int numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
-    int i;
+    int i,numberOfInstructions;
+    numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
     /* Searches for a match between the given word and one of the directive words, if found stops the loop */
     for(i = 0; i < numberOfInstructions; i++)
     {
@@ -52,12 +49,10 @@ state findInstruction(instructionWord *instructionToken)
 
             if(instructionToken->type == R)
                 instructionToken->funct = instruction[i].funct;
-
             break;
         }
     }
-    /* If no match was found. */
-    if(i == numberOfInstructions)
+    if(i == numberOfInstructions)   /* If no match was found. */
         return INVALID;
     return VALID;
 }
@@ -66,11 +61,11 @@ state instructionLineIsValid(newLine *line, instructionWord instructionToken, in
 {
     /* If there is no operands after the instruction , and it's not 'stop' instruction */
     if(instructionToken.opcode != 63 && emptyLine(line->content, contentIndex))
-        line-> error = "Missing Operands.";
+        line-> error = addError("Missing Operands.");
 
     /* If there is no spacing between the instruction and the first operand, and it's not 'stop' instruction */
     else if (instructionToken.opcode != 63 && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
-        line->error = "No spacing between the directive word and the first operand";
+        line->error = addError("No spacing between the directive word and the first operand");
 
     /* If no error was found, executing syntax and operands check for the instruction type */
     else
@@ -88,7 +83,7 @@ void checkOperandsSyntax(newLine *line, unsigned int opcode, int contentIndex)
 
     /* 'stop' instruction */
     if(opcode == 63 && !emptyLine(line->content, contentIndex))
-        line->error = "Excessive text after 'stop' instruction";
+        line->error = addError("Excessive text after 'stop' instruction");
 
     while(!(line->error) && line->content[contentIndex] != '\n')
     {
@@ -138,6 +133,7 @@ void checkOperandsSyntax(newLine *line, unsigned int opcode, int contentIndex)
     }
 }
 
+
 /* get the opcode and type of the instruction that appears in the current line */
 void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken)
 {
@@ -153,42 +149,59 @@ void getInstruction(const char *content, int *contentIndex, instructionWord *ins
     findInstruction(instructionToken);
 }
 
+/* Checks if the current address is valid according to the instruction type */
+bool addressIsValid(newLine *line, symbolTable label, instructionType type, long address)
+{
+        if(type == I)
+        {
+            /* The label can't be defined as external in type 'I' instruction */
+            if(label->isExtern)
+                line->error = addError("Label can't be defined as external in a conditional branching instruction");
+            /* The address must be in the 16-bit range */
+            else if(address < min2BytesIntVal || address > max2BytesIntVal)
+                line->error = addError("The label address is not in the correct range for type 'I' instruction");
+        }
+        else if(type == J && (address < min25BitsIntVal || address > max25bitsIntVal))
+            line->error = addError("The label address is not in the correct range for type 'J' instruction");
 
+        if(line->error)
+            return FALSE;
+    return TRUE;
+}
+
+/* Calculates requested address according to the instruction type */
 state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address)
 {
+    /* In 'I' type instruction, The 'immed' field contains the distance between the label and the instruction */
     if(type == I)
-    {
-        /* The label can't be defined as external in type 'I' instruction */
-        if(label->isExtern)
-            line->error = "Label can't be defined as external in a conditional branching instruction";
-        else
-        {
-            /* The 'immed' field contains the distance between the label and the instruction */
-            (*address) = label->address - instructionAddress;
-            /* The address must be in the 16-bit range */
-            if((*address) < min2BytesIntVal || (*address) > max2BytesIntVal)
-                line->error = "The label address is not in the correct range for type 'I' instruction";
-        }
-    }
+        (*address) = label->address - instructionAddress;
 
-    if(type == J)
+    /* In 'J' type instruction, the 'distance' represent the required label's address */
+    else if(type == J)
     {
         /* If label set as external, labels address unknown */
         if(label->isExtern)
             (*address) = 0;
         else
-        {
-            /* In 'J' type instruction, the 'distance' represent the required label's address */
             (*address) = label->address;
-            /* The address must be in the 25-bit range */
-            if((*address) < min25BitsIntVal || (*address) > max25bitsIntVal)
-                line->error = "The label address is not in the correct range for type 'J' instruction";
-        }
     }
-
-    if(line->error)
+    if(addressIsValid(line,label, type, *address))
         return VALID;
     return INVALID;
+}
+
+
+void processInstruction(newLine *line, int *contentIndex, bool labelSet ,char *label, symbolTable *symTable, codeTable *codeImage, long *IC)
+{
+    instructionWord instructionToken;
+    if(!(line->error) && instructionWordIsValid(line, &instructionToken, contentIndex))
+    {
+        if(labelSet && labelIsValid(line,label) && !labelIsDefined(label, *symTable, line, code))
+            addToSymbolTable(symTable, label, *IC, code);
+
+        if(!(line->error) && instructionLineIsValid(line, instructionToken, *contentIndex) == VALID)
+            addToCodeImage(line->content, *contentIndex, instructionToken, codeImage, IC);
+    }
 }
 
 

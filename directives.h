@@ -1,9 +1,10 @@
 
-#include "stringProcessing.h"
-
+#ifndef UNTITLED_DIRECTIVES_H
+#define UNTITLED_DIRECTIVES_H
 
 #define maxDirectiveName 7
-typedef enum {DH, DW, DB, ASCIZ, ENTRY, EXTERN, NONE} directiveType;
+
+
 
 typedef struct directiveWord
 {
@@ -23,16 +24,9 @@ static directiveWord directive[7] =
         };
 
 bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex);
-bool directiveNameIsValid(newLine *line, directiveWord  *directiveToken);
-bool isDataStorageDirective(directiveType thisDirective);
-state dataStorageDirectiveLineIsValid(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables,
-                                      void **dataArray);
-void checkDTypeDirectiveLine(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables);
-void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariables);
-void createDataArray(directiveType type, void **dataArray, int numOfVariables, const char *content, int index);
-void createDTypeArray(const char *content, int index, directiveType type, void *dataArray);
-void createAscizTypeArray(const char *content,int index,char *dataArray);
+void processDirective(directiveWord *directiveToken, bool labelSet, newLine *line, int *contentIndex, long *DC, symbolTable *symTable, dataTable *dataImage, char *label);
 
 
 
+#endif
 

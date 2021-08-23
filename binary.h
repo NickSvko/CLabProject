@@ -3,10 +3,14 @@
 #define UNTITLED_BINARY_H
 
 #include "instructions.h"
+#include "lineHandling.h"
+#include "tables.h"
 
-void updateLineBinaryEncoding(symbolTable label, codeImageTable table, instructionWord *instructionToken, newLine *line);
-state completeBinaryEncoding(newLine *line, symbolTable symTable, codeImageTable table, instructionWord *instructionToken,
-                       symbolTable *label);
+
+
+void updateLineBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line);
+void completeBinaryEncoding(newLine *line, symbolTable symTable, codeTable table, instructionWord *instructionToken,
+                            symbolTable *label);
 
 
 

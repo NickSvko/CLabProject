@@ -3,12 +3,10 @@
 #define UNTITLED_SECONDPASS_H
 
 
-//#include "lineHandling.h"
+#include "lineHandling.h"
 #include "tables.h"
 
-void
-singleLineSecondPass(newLine *line, symbolTable symbolsTab, codeImageTable codeImage, attributesTable *attributesTab);
-
+state secondPass(newLine *line, symbolTable symbolTab, codeTable codeImage, attributesTable *attributesTab, FILE *fd);
 
 
 

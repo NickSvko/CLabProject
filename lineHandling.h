@@ -3,18 +3,13 @@
 
 #include <stdio.h>
 #include "globals.h"
+#include "structs.h"
 
 
-typedef struct line
-{
-    long number;
-    const char *sourceFileName;
-    const char *content;
-    char *error;
-} newLine;
+
 
 void skipToTheNextLine(FILE *fileDescriptor);
-state lineLengthIsValid(const char *inputLine);
+state lineLength(const char *inputLine, newLine *line);
 bool emptyLine(const char *lineContent, int currentIndex);
 bool commentLine(const char *lineContent, int currentIndex);
 void printLineError(newLine *line);
