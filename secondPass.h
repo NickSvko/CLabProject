@@ -2,16 +2,10 @@
 #ifndef UNTITLED_SECONDPASS_H
 #define UNTITLED_SECONDPASS_H
 
+#include "structs.h"
 
-#include "lineHandling.h"
-#include "tables.h"
-
+/* Function prototypes */
 state secondPass(newLine *line, symbolTable symbolTab, codeTable codeImage, attributesTable *attributesTab, FILE *fd);
-
-
-
-
-
-
+state lineSecondPass(newLine *line, symbolTable symbolTab, codeTable codeImage, attributesTable *attributesTab);
 
 #endif //UNTITLED_SECONDPASS_H

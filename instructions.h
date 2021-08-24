@@ -1,22 +1,11 @@
 #ifndef UNTITLED_INSTRUCTIONS_H
 #define UNTITLED_INSTRUCTIONS_H
 
+#include "structs.h"
 
-#define maxInstructionLength 5
 #define noneFunct (-1)
 
-typedef struct instructionWord
-{
-    char name[maxInstructionLength];
-    unsigned int opcode;
-    unsigned int funct;
-    instructionType type;
-    /* The address of the instruction */
-    long address;
-} instructionWord;
-
-
-/* noneFunct = 0 */
+/* Table that represent all the available instruction and their type, funct(noneFunct = -1) and opcode */
 instructionWord instruction[] = {
         {"add",0,1, R},
         {"sub",0, 2, R},
@@ -47,15 +36,19 @@ instructionWord instruction[] = {
         {"stop", 63, noneFunct, J},
 };
 
-bool instructionWordIsValid(newLine *line, instructionWord *instructionToken, int *index);
+/* Function prototypes */
+state instructionWordState(newLine *line, instructionWord *instructionToken, int *index);
 state findInstruction(instructionWord *instructionToken);
-void checkOperandsSyntax(newLine *line, unsigned int opcode, int contentIndex);
-state instructionLineIsValid(newLine *line, instructionWord instructionToken, int contentIndex);
+state instructionLineState(newLine *line, instructionWord instructionToken, int contentIndex);
+void checkJOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands);
+void checkIOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands);
+void checkOperandByType(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands);
+void checkInstructionSyntax(newLine *line, unsigned int opcode, int contentIndex);
 void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken);
 state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address);
-bool addressIsValid(newLine *line, symbolTable label, instructionType type, long address);
-void processInstruction(newLine *line, int *contentIndex, bool labelSet ,char *label, symbolTable *symTable, codeTable *codeImage, long *IC);
-
+state addressState(newLine *line, symbolTable label, instructionType type, long address);
+void processInstruction(newLine *line, int *index, bool labelSet , char *label, symbolTable *symTab, codeTable *cImage, long *IC);
+bool instructionWithLabelOperand(newLine *line, int index, unsigned int opcode);
 
 
 #endif //UNTITLED_INSTRUCTIONS_H

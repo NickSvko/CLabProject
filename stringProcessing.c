@@ -3,16 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "stringProcessing.h"
-#include "globals.h"
 #include "general.h"
-
-
-/* Finds the index of next char that is not space or tab. */
-void skipSpaces(const char *lineContent,int *lineIndex)
-{
-    while(lineContent[*lineIndex] == ' ' || lineContent[*lineIndex] == '\t')
-        (*lineIndex)++;
-}
 
 /* Checks if the current word is alphanumeric */
 bool isAlphanumeric(const char *symbol)
@@ -27,12 +18,12 @@ bool isAlphanumeric(const char *symbol)
     return  TRUE;
 }
 
-
+/* Checks the validity of a comma in the current position and returns whether the syntax in the current position is valid */
 state checkForComma(newLine *line, int *index, int numOfVariables)
 {
     skipSpaces(line->content, index);
-    /* if the current character is comma, checks for multiple commas or if comma located in invalid location. */
-    if(line->content[*index] == ',')
+
+    if(line->content[*index] == ',')  /* checks for multiple commas or if comma located in an invalid location */
     {
         (*index)++;
         skipSpaces(line->content, index);
@@ -47,78 +38,24 @@ state checkForComma(newLine *line, int *index, int numOfVariables)
     /* If the current character is not a comma, check if we are between numbers */
     else if(numOfVariables != 0 && line->content[*index] != '\n')
         line-> error = addError("Missing comma");
-
-    if(line -> error)
-        return INVALID;
-    return VALID;
+    return currentState(line);
 }
 
+/* Extracts the next integer in line, and checks its validation */
 void checkInteger(newLine *line, int *contentIndex, int *numOfVariables, int maxNumLength, int minVal, int maxVal)
 {
-    int i = 0;
     int numValue;
     char numString[maxNumLength + 1];
 
-    /* If the number start with '-' or '+' saves it in the string that represent the current number from the line. */
-    if(line->content[*contentIndex] == '-' || line->content[*contentIndex] == '+')
-        numString[i++] = line->content[(*contentIndex)++];
+    numValue = scanInt(line->content, contentIndex, numString, maxNumLength);
 
-    /* Extraction of the next integer from the given line */
-    while(!isspace(line->content[*contentIndex]) && line->content[*contentIndex] != ',' && i <= maxNumLength)
-    {
-        /* If a character isn't an integer. */
-        if(!isdigit(line->content[*contentIndex]))
-        {
-            line->error = addError("Invalid operand, operand must be an integer");
-            break;
-        }
-        numString[i++] = (char)(line->content[(*contentIndex)++] + '0');
-    }
-
-    if(i == maxNumLength)
-        line->error = addError("Integer out of range");
-
-    /* If no error was found while extracting the number from the line, check if the number is in the valid range */
-    if(!(line->error))
-    {
-        numValue = atoi(numString);
-        if(numValue > maxVal || numValue < minVal)
-            line->error = addError("Integer out of range");
-        else
-            (*numOfVariables)++;
-    }
+    if(!intIsValid(numString, numValue, maxVal, minVal, maxNumLength))
+        line->error = addError("Invalid operand, Operand must be an integer in the range defined by the command");
+    else
+        (*numOfVariables)++;
 }
 
-
-bool registerIsValid(char *registerString, int registerNum)
-{
-    int i;
-    bool isValid = TRUE;
-
-    if(strlen(registerString) > maxRegisterLength || (registerNum > 31 || registerNum < 1))
-        isValid = FALSE;
-
-    for(i = 0; i < strlen(registerString) && isValid == TRUE; i++)
-    {
-        /* If a character isn't an integer. */
-        if(!isdigit(registerString[i]))
-            isValid = FALSE;
-    }
-    return isValid;
-}
-
-
-void scanRegister(const char *content, int *contentIndex, char *registerString, int *registerNum)
-{
-    int i = 0;
-    /* Extraction of an operand from a given line */
-    while(!isspace(content[*contentIndex]) && content[*contentIndex] != ',' && i <= maxRegisterLength)
-        registerString[i++] = (char)(content[(*contentIndex)++] + '0');
-
-    (*registerNum) = atoi(registerString);
-}
-
-
+/* Extracts the next register in line, and checks its validation */
 void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands)
 {
     int registerNum;
@@ -130,52 +67,18 @@ void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands)
         registerState = INVALID;
     else
     {
-        (*contentIndex)++;
-        scanRegister(line->content, contentIndex, registerString, &registerNum);
-        if(registerIsValid(registerString, registerNum) == FALSE)
+        (*contentIndex)++; /* skips to the start of the register number */
+        registerNum = scanInt(line->content, contentIndex, registerString, maxRegisterLength);
+        if(!intIsValid(registerString, registerNum, maxRegister, minRegister, maxRegisterLength))
             registerState = INVALID;
     }
     if(registerState == INVALID)
-        line->error = addError("Invalid register. register must start with '$' and represent a number between 1-31");
+        line->error = addError("Invalid register. register must start with '$' and represent a number between 0-31");
     else
         (*numOfScannedOperands)++;
 }
 
-
-int getNumber(const char *content, int *index)
-{
-    int i = 0;
-    int num;
-    /* Number size is 2 bytes */
-    char numString[max2BytesIntLength];
-    /* Continues until encountering the beginning of a number */
-    for(; !isdigit(content[*index]) && content[*index] != '-' && content[*index] != '+'; (*index)++ );
-    /* Scans the number */
-    while(!isWhiteSpace(content[*index]) && content[*index] != ',')
-        numString[i++] = content[(*index)++];
-
-    num = atoi(numString);
-    return num;
-}
-
-int getRegister(const char *content, int *index)
-{
-    int i = 0;
-    int registerNum;
-    /* Register is an integer between 1 - 31 */
-    char registerString[2];
-    /* Continues until encountering the beginning of a register */
-    for(; content[*index] != '$'; (*index)++ );
-    /* Skips to the register number */
-    (*index)++;
-    /* Scans the register */
-    while(!isWhiteSpace(content[*index]) && content[*index] != ',')
-        registerString[i++] = content[(*index)++];
-
-    registerNum = atoi(registerString);
-    return registerNum;
-}
-
+/* checks if the amount of operands is bigger than the valid amount for the given instruction, if so, adds an error */
 void checkOperandsAmount(newLine *line, unsigned int opcode, int numOfOperands)
 {
     if(opcode == 0 && numOfOperands != 3)
@@ -194,6 +97,33 @@ void checkOperandsAmount(newLine *line, unsigned int opcode, int numOfOperands)
         line->error = addError("Incorrect number of operands, jump instruction should receive only one operand");
 }
 
+/* Extracts the next 2 bytes size int in line */
+int get2BytesInt(const char *content, int *index)
+{
+    int intValue;
+    char intString[max2BytesIntLength];
+
+    intValue = scanInt(content, index, intString, max2BytesIntLength);
+
+    return intValue;
+}
+
+/* Extracts the next register in line */
+int getRegister(const char *content, int *index)
+{
+    int registerNum;
+    char registerString[maxRegisterLength];
+
+    for(; content[*index] != '$'; (*index)++ );  /* Continues until encountering the beginning of a register */
+
+    (*index)++;  /* Skips to the register number */
+
+    registerNum = scanInt(content, index, registerString, maxRegisterLength);
+
+    return registerNum;
+}
+
+/* checks and return if the next word is a definition of a register*/
 bool isRegister(const char *content, int index)
 {
     /* Continues until encountering the beginning of an operand */
@@ -204,12 +134,44 @@ bool isRegister(const char *content, int index)
     return FALSE;
 }
 
-bool isWhiteSpace(char thisChar)
+/* Extracts an integer from the given line */
+int scanInt(const char *content, int *contentIndex, char *numString, int maxLength)
 {
-    if(thisChar == ' ' || thisChar == '\t' || thisChar == '\n')
-        return TRUE;
-    return FALSE;
+    int numberValue;
+    int i = 0;
+
+    skipSpaces(content, contentIndex);
+
+    /* Scans the string until encounter separation - space, comma or end of line */
+    while(!isspace(content[*contentIndex]) && content[*contentIndex] != ',' && i <= maxLength)
+        numString[i++] = (char)(content[(*contentIndex)++] + '0');
+
+    numberValue = atoi(numString);
+    return numberValue;
 }
+
+/* Checks and returns if the given string represent a valid integer in the desired limits */
+bool intIsValid(char *numString, int numValue, int maxValue, int minValue, int maxLength)
+{
+    int i;
+    bool isValid = TRUE;
+
+    /* Checks if the integer is in the proper limits */
+    if(strlen(numString) > maxLength || (numValue > maxValue || numValue < minValue))
+        isValid = FALSE;
+
+    for(i = 0; i < strlen(numString) && isValid == TRUE; i++)
+    {
+        /* Checks if all the characters of the string that represent the integer are number or mathematical symbols */
+        if(!isdigit(numString[i]) && numString[i] != '-' && numString[i] != '+')
+            isValid = FALSE;
+    }
+    return isValid;
+}
+
+
+
+
 
 
 

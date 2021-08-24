@@ -1,45 +1,38 @@
 
-#include "stringProcessing.h"
-#include "directives.h"
 #include "lineHandling.h"
 #include "labels.h"
 #include "instructions.h"
-#include "structs.h"
+#include "general.h"
+#include "directives.h"
 
-
-state lineFirstPass(newLine *line, long *IC, long *DC, symbolTable *symTable, codeTable *codeImage, dataTable *dataImage)
+/* Performs a first pass on a single line from the input file */
+state lineFirstPass(newLine *line, long *IC, long *DC, symbolTable *symTab, codeTable *cImage, dataTable *dImage)
 {
     int contentIndex = 0;
     char symbol[maxLineLength];
     bool labelSetting = FALSE;
     directiveWord directiveToken;
 
-    skipSpaces(line->content, &contentIndex);
-
-    /* If  the current line in comment or an empty line, skip line. */
-    if(emptyLine(line->content, contentIndex) || commentLine(line-> content, contentIndex))
-        return SUCCEEDED;
+    /* If  the current line in comment or an empty line, skip line */
+    if(emptyLine(line->content, contentIndex) || commentLine(line-> content, &contentIndex))
+        return VALID;
 
     checkForLabelSetting(line, symbol, &contentIndex, &labelSetting);
-
     /* If no error was found and the current word is a directive word, saves the word. */
-    if(!(line-> error) && isDirective(line->content, &directiveToken, &contentIndex))
-        processDirective(&directiveToken, labelSetting, line, &contentIndex, DC, symTable, dataImage, symbol);
-
-    /* If it's not a directive then it's necessarily an instruction, check if the current line is a valid instruction */
+    if(currentState(line) == VALID && isDirective(line->content, &directiveToken, &contentIndex))
+        processDirective(&directiveToken, labelSetting, line, &contentIndex, DC, symTab, dImage, symbol);
+    /* If it's not a directive then it's necessarily an instruction, checks if the current line is a valid instruction */
     else
-        processInstruction(line, &contentIndex, labelSetting, symbol, symTable, codeImage, IC);
+        processInstruction(line, &contentIndex, labelSetting, symbol, symTab, cImage, IC);
 
-    if(line->error)
-        return FAILED;
-    return SUCCEEDED;
+    return currentState(line);
 }
 
-state firstPass(newLine *line, long *IC, long *DC, symbolTable *symTab, codeTable *codeImage, dataTable *dataImage, FILE *fd)
+/* Performs a first pass on single input file */
+state firstPass(newLine *line, long *IC, long *DC, symbolTable *symTab, codeTable *cImage, dataTable *dImage, FILE *fd)
 {
-    /* Temporary string for storing single line from an input file */
-    char tempLine[maxLineLength + 2];
-    state process = SUCCEEDED;
+    char tempLine[maxLineLength + 2];  /* Temporary string for storing single line from an input file */
+    state process = VALID;
 
     /* Check validation of each line from the input file, until reach end of file. */
     for(line->number = 1; fgets(tempLine, maxLineLength + 2, fd) != NULL; line->number++)
@@ -50,10 +43,10 @@ state firstPass(newLine *line, long *IC, long *DC, symbolTable *symTab, codeTabl
         if(lineLength(line->content, line) == INVALID)
             skipToTheNextLine(fd);
 
-        else if(lineFirstPass(line, IC, DC, symTab, codeImage, dataImage) == FAILED)
+        else if(lineFirstPass(line, IC, DC, symTab, cImage, dImage) == INVALID)
         {
             printLineError(line);
-            process = FAILED;
+            process = INVALID;
         }
     }
     return process;

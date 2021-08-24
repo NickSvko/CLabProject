@@ -5,13 +5,11 @@
 #include "globals.h"
 #include "structs.h"
 
-
-
-
+/* Function prototypes */
 void skipToTheNextLine(FILE *fileDescriptor);
 state lineLength(const char *inputLine, newLine *line);
 bool emptyLine(const char *lineContent, int currentIndex);
-bool commentLine(const char *lineContent, int currentIndex);
+bool commentLine(const char *lineContent, int *currentIndex);
 void printLineError(newLine *line);
 
 #endif //UNTITLED_LINEHANDLING_H

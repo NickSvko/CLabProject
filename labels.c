@@ -1,86 +1,88 @@
 
 #include <string.h>
 #include <ctype.h> /* For isalpha() */
-//#include "labels.h"
 #include "stringProcessing.h"
-#include "tables.h"
-#include "directives.h"
+#include "instructions.h"
 #include "general.h"
+#include "lineHandling.h"
 
-bool labelIsDefined(char *label, symbolTableEntry *table, newLine *line, imageType type)
+/* Checks if the current symbol can be added to the current label */
+void checkAttributeValidity(newLine *line, imageType type, symbolTable table)
+{
+    if(table->type == code || table->type == data)
+    {
+        if(type == entry)  /* Add 'entry' attribute to defined label */
+            table->isEntry = TRUE;
+
+        else  /* An attempt to define label more the once */
+            line->error = addError("Label is already defined");
+    }
+    else if(table->isExtern && type != external)  /* An attempt to set an external label as a non-external */
+        line->error = addError("Label is already defined as external");
+}
+
+/* Check if the current label is defined, return true if it does, else returns false */
+bool labelIsDefined(char *label, newLine *line, symbolTable head, imageType type)
 {
     bool isDefined = FALSE;
-    while(table != NULL)
-    {
-        if(strcmp(table->name, label) == 0)
-        {
-            /* If we want to mark as '.entry' a label that has already been defined */
-            if(table->type == code || table->type == data)
-            {
-                if(type == entry)
-                    table->isEntry = TRUE;
-                else
-                    line->error = "Label is already defined";
-            }
-            /* If we try to set an external label as a non-external label */
-            else if(table->isExtern && type != external)
-                line->error = "Label is already defined as external";
+    symbolTable temp;
 
+    for (temp = head; temp != NULL ; temp = temp->next)
+    {
+        if(strcmp(head->name, label) == 0)
+        {
             isDefined = TRUE;
+            checkAttributeValidity(line, type, head);
         }
-        table = table->next;
     }
-    /* If we are trying to define a label that does not exist as '.entry' label */
-    if(type == ENTRY && !isDefined)
-        line->error = "No label was found to be defined as entry";
+    /* An attempt of adding 'entry' attribute to a label that doesn't exist */
+    if(type == entry && !isDefined)
+        line->error = addError("No label was found to be defined as entry");
 
     return isDefined;
 }
 
+/* Checks the validation of a label, and returns its state - valid/invalid */
 state labelIsValid(newLine *line, char *label)
 {
-    int i;
-    int numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
+    int i, numberOfInstructions;
+    numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
+
     /* Check if the label name is syntactically correct */
     if(strlen(label) > maxLabelLength || !isalpha(label[0]) || !isAlphanumeric(label))
-        line-> error = "label's name syntactically incorrect";
+        line->error = addError("label's name syntactically incorrect");
 
-    /* Check if label's name is a reserved instructionWord word. no need to check directive words because they start with '.' */
-    else if(!(line-> error))
+    /* Check if label's name is a reserved instructionWord word - no need to check directive words(starts with '.' ) */
+    for(i = 0; i < numberOfInstructions && !(line->error); i++)
     {
-        for(i = 0; i < numberOfInstructions; i++)
-        {
-            if(strcmp(label, instruction[i].name) == 0)
-            {
-                line-> error = "invalid label, the label name is a reserved instructionWord word";
-                break;
-            }
-        }
+        if(strcmp(label, instruction[i].name) == 0)
+            line-> error = addError("invalid label, the label name is a reserved instructionWord word");
     }
-    if(!(line-> error))
-        return INVALID;
-    return VALID;
+    return currentState(line);
 }
 
-bool symbolIsLabelDefinition(const char *lineContent, char *symbol, int *index)
+/* Checks if line first word is a label definition, if so, returns true and saves label name, else returns false */
+bool symbolIsLabelDefinition(const char *lineContent, char *symbol, int *contentIndex)
 {
     bool isLabel = FALSE;
-    int i = (*index); /* line content index */
-    int j = 0; /* symbol index */
+    int i = (*contentIndex);
+    int symIndex = 0;
 
-    for(; lineContent[i] != ':' && lineContent[i] != '\n'; i++, j++)
-        symbol[j] = lineContent[i];
+    /* Scans the word until encounter end of label definition or end of line */
+    for(; lineContent[i] != ':' && lineContent[i] != '\n'; i++, symIndex++)
+        symbol[symIndex] = lineContent[i];
 
     /* If it's a label definition, update line content index to the end of the definition and saves symbol as string */
     if(lineContent[i] == ':')
     {
-        symbol[j] = '\0'; /* End of string */
-        (*index) = i + 1;
+        symbol[symIndex] = '\0'; /* End of string */
+        (*contentIndex) = i + 1; /* Promotes the index to be after the symbol definition */
         isLabel = TRUE;
     }
     return isLabel;
 }
 
+/* Scans the next label from line */
 void getLabelName(const char *content, int *index, char *label)
 {
     int i = 0;
@@ -93,6 +95,7 @@ void getLabelName(const char *content, int *index, char *label)
     label[i] = '\0'; /* End of string */
 }
 
+/* Checks if there is a label definition in the current line, if so, skips it */
 void skipLabelDefinition(const char *content, int *index)
 {
     int i;
@@ -115,6 +118,7 @@ void extractLabelFromLine(char *symbol, const char *content, int index)
     getLabelName(content, &index, symbol);
 }
 
+/* Extract label from table by name, if succeeded returns valid, else returns invalid */
 state getLabelFromTable(newLine *line, char *symbol, symbolTable *label, symbolTable table)
 {
     symbolTable currentEntry;
@@ -124,14 +128,15 @@ state getLabelFromTable(newLine *line, char *symbol, symbolTable *label, symbolT
         if(strcmp(symbol, currentEntry->name) == 0)
         {
             (*label) = currentEntry;
-            return SUCCEEDED;
+            return VALID;
         }
     }
     /* If failed to find the required label */
-    line->error = "The required label wasn't found";
-    return FAILED;
+    line->error = addError("The required label wasn't found");
+    return INVALID;
 }
 
+/* Checks if there is a valid label definition in the current line, and the line isn't empty after it */
 void checkForLabelSetting(newLine *line, char *symbol, int *contentIndex, bool *labelSetting)
 {
     /* If the first word in line is a valid label definition turns on 'labelSetting' flag. */
@@ -141,6 +146,13 @@ void checkForLabelSetting(newLine *line, char *symbol, int *contentIndex, bool *
     /* If the current line is empty after label definition */
     if(*labelSetting == TRUE && emptyLine(line->content, *contentIndex))
         line->error = addError("Missing instruction/directive after label definition");
+}
+
+/* Adds 'entry' attribute to defined label, if the label isn't defined adds an error */
+void defineLabelAsEntry(newLine *line, symbolTable symbolTab, int *index, char *label)
+{
+    getLabelName(line->content, index, label);
+    labelIsDefined(label, line, symbolTab, entry);
 }
 
 

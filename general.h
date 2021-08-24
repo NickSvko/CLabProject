@@ -2,11 +2,14 @@
 #ifndef UNTITLED_GENERAL_H
 #define UNTITLED_GENERAL_H
 
-//#include <stdlib.h>
-//#include <stdio.h>
-//#include "lineHandling.h"
+#include "structs.h"
+#include "globals.h"
 
-void *mallocWithCheck(unsigned long size);
+void *callocWithCheck(unsigned long size);
 char *addError(char *error);
+void printLineError(newLine *line);
+state currentState(newLine *line);
+bool isWhiteSpace(char thisChar);
+void skipSpaces(const char *lineContent, int *lineIndex);
 
 #endif //UNTITLED_GENERAL_H

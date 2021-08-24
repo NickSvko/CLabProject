@@ -4,12 +4,30 @@
 
 #include "globals.h"
 
-/* Indicates where label is stored, code image / data image */
+/* Indicates where label is stored, code image/data image and label attributes, entry/extern */
 typedef enum symbolType {code, data, entry, external} imageType;
+
 typedef enum {DH, DW, DB, ASCIZ, ENTRY, EXTERN, NONE} directiveType;
+
 typedef enum instructionType{R,I,J} instructionType;
 
-/* Representation of R-type instructionWord structure */
+typedef struct instructionWord
+{
+    char name[maxInstructionLength];
+    unsigned int opcode;
+    unsigned int funct;
+    instructionType type;
+    /* The value of the instruction */
+    long address;
+} instructionWord;
+
+typedef struct directiveWord
+{
+    char name[maxDirectiveName];
+    directiveType value;
+} directiveWord;
+
+/* Representation of R-type instructionWord binary structure */
 typedef struct typeRInstruction
 {
     /* Unused, bits: 5-0 */
@@ -26,10 +44,10 @@ typedef struct typeRInstruction
     unsigned int opcode: 6;
 } typeRInstruction;
 
-/* Representation of I-type instructionWord structure */
+/* Representation of I-type instructionWord binary structure */
 typedef struct typeIInstruction
 {
-    /* Fixed/immediate address, bits: 15-0 */
+    /* Fixed/immediate value, bits: 15-0 */
     signed int immed: 16;
     /* Second register, bits: 20-16 */
     unsigned int rt: 5;
@@ -39,10 +57,10 @@ typedef struct typeIInstruction
     unsigned int opcode: 6;
 } typeIInstruction;
 
-/* Representation of J-type instructionWord structure */
+/* Representation of J-type instructionWord binary structure */
 typedef struct typeJInstruction
 {
-    /* address, bits: 24-0 */
+    /* value, bits: 24-0 */
     unsigned int address: 25;
     /* reg, bit: 25 */
     unsigned int reg: 1;
@@ -50,6 +68,7 @@ typedef struct typeJInstruction
     unsigned int opcode: 6;
 } typeJInstruction;
 
+/* Bit fields that defined by instruction type */
 typedef union codeType
 {
     typeRInstruction *typeR;
@@ -57,14 +76,12 @@ typedef union codeType
     typeJInstruction *typeJ;
 } codeType;
 
-
 typedef struct symbolTableEntry* symbolTable;
 
-/* Symbol table entry */
 typedef struct symbolTableEntry
 {
     char *name;
-    long address;
+    long value;
     imageType type;
     bool isEntry;
     bool isExtern;
@@ -73,18 +90,17 @@ typedef struct symbolTableEntry
 
 typedef struct codeImageEntry *codeTable;
 
-/* Code Image */
 typedef struct codeImageEntry
 {
     int address;
     instructionType type;
+    /* The instruction line translated to binary */
     codeType *data;
     struct codeImageEntry *next;
 } codeImageEntry;
 
 typedef struct dataImageEntry *dataTable;
 
-/* Data Image */
 typedef struct dataImageEntry
 {
     long address;
@@ -105,7 +121,7 @@ typedef struct attributesTableEntry
     imageType type;
     /* The name of the label */
     char *name;
-    /* The address of the label(if entry) or of the instruction(if) extern */
+    /* The value of the label(if entry) or of the instruction(if) extern */
     long address;
     struct attributesTableEntry *next;
 } attributesTableEntry;
@@ -113,8 +129,11 @@ typedef struct attributesTableEntry
 typedef struct line
 {
     long number;
+    /* The name of the file from which the line was taken */
     const char *sourceFileName;
+    /* content of a single line from input */
     const char *content;
+    /* The error that occurred during lines process (if any) */
     char *error;
 } newLine;
 

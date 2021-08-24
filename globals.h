@@ -5,7 +5,7 @@
 /* Maximum line length from source file - not including '\n' */
 #define maxLineLength 80
 
-/* Initial the address of IC(instruction counter) */
+/* Initial the value of IC(instruction counter) */
 #define ICInitialValue 100
 
 #define maxLabelLength 31
@@ -30,13 +30,17 @@
 #define max25bitsIntVal 16777215
 #define min25BitsIntVal (-16777216)
 
+#define maxInstructionLength 5
+#define maxDirectiveName 7
 
+#define minRegister 0
+#define maxRegister 31
 
 /* true/false definition */
 typedef enum bool{FALSE,TRUE} bool;
 
 /* valid/invalid definition */
-typedef enum state{INVALID = 0, FAILED = 0, VALID = 1, SUCCEEDED = 1} state;
+typedef enum state{INVALID = 0, VALID = 1} state;
 
 
 

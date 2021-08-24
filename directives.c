@@ -6,40 +6,44 @@
 #include "directives.h"
 #include "general.h"
 #include "labels.h"
+#include "tables.h"
+#include "lineHandling.h"
 
-
-
-void getDirectiveName(const char *lineContent, char *directiveName, int *contentIndex)
+/* Scans the current directive word from the input line */
+void getDirectiveWord(const char *lineContent, char *directiveName, int *contentIndex)
 {
     int nameIndex = 0;
 
-    /* Getting the directive name */
+    /* Scans the directive name */
     while(!isWhiteSpace(lineContent[*contentIndex]))
         directiveName[nameIndex++] = lineContent[(*contentIndex)++];
 
     directiveName[nameIndex] = '\0'; /* End of string */
 }
 
-/* Check If the current word in the give line is a directive definition, if true save the word */
+/* Checks If the current word from input line is a directive definition, if true saves the word, else saves an error */
 bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex)
 {
     bool directiveDefinition = FALSE;
-    int i;
+    int i = (*contentIndex);
 
-    skipSpaces(lineContent, contentIndex); /* update contentIndex to the next char that is not ' ' or '\t'. */
+    skipSpaces(lineContent, contentIndex); /* update contentIndex to the next char that is not ' ' or '\t' */
 
-    i = (*contentIndex);
     /* If the first char of the current word is '.' than it's a directive word declaration. */
     if (lineContent[i] == '.')
     {
-        getDirectiveName(lineContent, directiveToken->name, &i);
+        getDirectiveWord(lineContent, directiveToken->name, &i);
         (*contentIndex) = i;
         directiveDefinition = TRUE;
     }
     return directiveDefinition;
 }
 
-bool directiveNameIsValid(newLine *line, directiveWord  *directiveToken)
+/*
+ * Checks if the current word matches to one of the available directive words,
+ * if a match is found returns word  is valid, else, returns invalid.
+ */
+state directiveName(newLine *line, directiveWord  *directiveToken)
 {
     /* The total number of the possible directive words */
     int numberOfDirectives = sizeof(directive) / sizeof(directive[0]);
@@ -53,15 +57,13 @@ bool directiveNameIsValid(newLine *line, directiveWord  *directiveToken)
             break;
         }
     }
-    /* If no match was found. */
-    if(i == numberOfDirectives)
-    {
-        line-> error = "unrecognized directive word";
-        return FALSE;
-    }
-    return TRUE;
+    if(i == numberOfDirectives) /* If no match was found */
+        line-> error = addError("unrecognized directive word");
+
+    return currentState(line);
 }
 
+/* Checks by the name of the directive whether it's a data storage directive, and returns the conclusion */
 bool isDataStorageDirective(directiveType thisDirective)
 {
     if(thisDirective == DH || thisDirective == DW || thisDirective == DB || thisDirective == ASCIZ)
@@ -69,9 +71,24 @@ bool isDataStorageDirective(directiveType thisDirective)
     return FALSE;
 }
 
-void createDTypeArray(const char *content, int index, directiveType type, void *dataArray)
+/* Inserting the current variable into the data array, the type of variable depends on the directive name  */
+void enterVariableByType(directiveType type, const void *dataArray, int *arrayIndex, char *numString)
 {
-    int i = 0, arrayIndex = 0, numValue;
+    int numValue;
+    numValue = atoi(numString);
+
+    if(type == DB)
+        ((char *)dataArray)[(*arrayIndex)++] = (char)numValue;  /* '.db' directive contain 1 byte variables */
+    else if(type == DH)
+        ((short *)dataArray)[(*arrayIndex)++] = (short)numValue;  /* '.dh' directive contain 2 bytes variables */
+    else if(type == DW)
+        ((int *)dataArray)[(*arrayIndex)++] = numValue;  /* '.dw' directive contain 4 bytes variables */
+}
+
+/* For '.db'/'.dh'/'.dw' directive, Scans a variable from the input line and enters it to the data array */
+void scanDVariableToArray(const char *content, int index, directiveType type, void *dataArray)
+{
+    int i = 0, arrayIndex = 0;
     char numString[max4BytesIntLength]; /* Max length of any valid number from input */
 
     /* Scans all the numbers to the end of the line  */
@@ -86,21 +103,13 @@ void createDTypeArray(const char *content, int index, directiveType type, void *
 
         /* If a number has been found */
         if(i != 0)
-        {
-            numValue = atoi(numString);
-
-            if(type == DB)
-                ((char *)dataArray)[arrayIndex++] = (char)numValue;
-            else if(type == DH)
-                ((short *)dataArray)[arrayIndex++] = (short)numValue;
-            else if(type == DW)
-                ((int *)dataArray)[arrayIndex++] = numValue;
-        }
+            enterVariableByType(type, dataArray, &arrayIndex, numString);
         i = 0;
     }
 }
 
-void createAscizTypeArray(const char *content,int index,char *dataArray)
+/* For '.asciz' directive, Scans a variable from the input line and enters it to the data array */
+void scanAscizVariableToArray(const char *content, int index, char *dataArray)
 {
     int arrayIndex = 0;
 
@@ -114,50 +123,63 @@ void createAscizTypeArray(const char *content,int index,char *dataArray)
     dataArray[arrayIndex] = '\0'; /* End of string */
 }
 
+/* Creates an array of data, the number of variables obtained, the size of the array depends on the directive */
 void createDataArray(directiveType type, void **dataArray, int numOfVariables, const char *content, int index)
 {
-    if(type == DB || type == ASCIZ)
-        *dataArray = mallocWithCheck(sizeof(char) * numOfVariables);
-    if(type == DH)
-        *dataArray = mallocWithCheck(sizeof(short) * numOfVariables);
-    if(type == DW)
-        *dataArray = mallocWithCheck(sizeof(int) * numOfVariables);
+    if(type == DB || type == ASCIZ)  /* '.db'/'.asciz' directives contain 1 byte variables */
+        *dataArray = callocWithCheck(sizeof(char) * numOfVariables);
+    if(type == DH)  /* '.dh' directive contain 2 bytes variables */
+        *dataArray = callocWithCheck(sizeof(short) * numOfVariables);
+    if(type == DW)  /* '.dw' directive contain 4 bytes variables */
+        *dataArray = callocWithCheck(sizeof(int) * numOfVariables);
 
     if(type == DH || type == DB || type == DW)
-        createDTypeArray(content, index, type, *dataArray);
+        scanDVariableToArray(content, index, type, *dataArray);
 
+     /* When it comes to '.asciz' directive,
+      * scanning the variable from the input line is different from the rest of the data storage directives
+      */
     else if(type == ASCIZ)
-        createAscizTypeArray(content, index, *dataArray);
+        scanAscizVariableToArray(content, index, *dataArray);
 }
 
+/*
+ * For the '.asciz' directive, check whether the current character is valid - depending on where it is located.
+ * if a character invalid - saves an error.
+ */
+void checkAscizCharValidity(newLine *line, int contentIndex, int *numOfVariables, bool inQuotes)
+{
+    /* If a char is not spacing or new line and is out of string */
+    if(!inQuotes && !isWhiteSpace(line->content[contentIndex]))
+        line -> error = addError("The string is not bounded by quotes");
+
+    if(inQuotes)
+    {
+        if(!isprint(line->content[contentIndex]))   /* If char is in quotes and isn't printable. */
+            line->error = addError("String contain char that cannot be printed");
+        else
+            (*numOfVariables)++;
+    }
+}
+
+/* Checks if an input line that represents '.asciz' directive is valid */
 void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariables)
 {
-    /* Indicates whether the current character is in or out of quotes. */
-    bool inQuotes = FALSE;
+    bool inQuotes = FALSE;  /* Indicates whether the current character is in or out of quotes. */
 
+    /* Checks the validity on each character in the input line */
     for(; line -> content[contentIndex] != '\n' && !(line->error); contentIndex++)
     {
         if(line->content[contentIndex] == '"')
             inQuotes = !inQuotes;
 
-        /* If a char is not spacing or new line and is out of string */
-        if(!inQuotes && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t' && line->content[contentIndex] != '\n')
-            line -> error = "The string is not bounded by quotes";
-
-        if(inQuotes)
-        {
-            /* If char is in quotes and isn't printable. */
-            if(!isprint(line->content[contentIndex]))
-                line->error = "String contain char that cannot be printed";
-            else
-                (*numOfVariables)++;
-        }
+        checkAscizCharValidity(line, contentIndex, numOfVariables, inQuotes);
     }
-    /* If no error was found, increasing number of variables by one for '\0' char.*/
-    if(!(line->error))
+    if(!(line->error))  /* If no error was found, increasing number of variables by one for '\0' character */
         (*numOfVariables)++;
 }
 
+/* Checks if an input line that represents '.db'/'.dh'/'.dw' directive is valid */
 void checkDTypeDirectiveLine(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables)
 {
     /* While no error is found, check line's validation. */
@@ -175,45 +197,49 @@ void checkDTypeDirectiveLine(newLine *line, directiveType thisDirective, int con
     }
 }
 
-state dataStorageDirectiveLineIsValid(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables,
-                                      void **dataArray)
+/* Sends the  data storage directive line for check depending on the directive name */
+void checkDirectiveByType(newLine *line, directiveType type, int index, int *numOfVariables)
 {
-    if(emptyLine(line->content, contentIndex)) /* If there is no operands after the directive word. */
-        line-> error = "Missing Operands.";
+    if(type == DH || type == DW || type == DB)
+         checkDTypeDirectiveLine(line, type, index, numOfVariables);
 
-    /* If there is no spacing between the directive word and the first operand. */
-    else if (line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
-        line->error = "No spacing between the directive word and the first operand";
-
-    /* If no error was found, executing Specific check of syntax and operands for directive line type .dh/.dw/.db */
-    else if (thisDirective == DH || thisDirective == DW || thisDirective == DB)
-        checkDTypeDirectiveLine(line, thisDirective, contentIndex, numOfVariables);
-
-    else if(thisDirective == ASCIZ)
-        checkAscizDirectiveLine(line, contentIndex, numOfVariables);
-
-    if (!(line->error))
-    {
-        createDataArray(thisDirective, dataArray, *numOfVariables, line->content, contentIndex);
-        return VALID;
-    }
-    return INVALID;
+    else if(type == ASCIZ)
+         checkAscizDirectiveLine(line, index, numOfVariables);
 }
 
+/* Checks if the data storage directive line is valid, if so, create a data array and returns valid, else returns invalid */
+state dataStorageDirective(newLine *line, directiveType type, int index, int *numOfVariables, void **dataArray)
+{
+    if(emptyLine(line->content, index)) /* If there is no operands after the directive word. */
+        line-> error = addError("Missing Operands.");
 
+    /* If there is no spacing between the directive word and the first operand. */
+    else if (line->content[index] != ' ' && line->content[index] != '\t')
+        line->error = addError("No spacing between the directive word and the first operand");
 
-void processDataStorageDirective(char *label, newLine *line, directiveType type, bool labelSet, int contentIndex, symbolTable *symTable, dataTable *dataImage, long *DC)
+    /* If no error was found, executing Specific check of syntax and operands for directive line type .dh/.dw/.db */
+    else
+        checkDirectiveByType(line, type, index, numOfVariables);
+
+    if(currentState(line) == VALID)
+        createDataArray(type, dataArray, *numOfVariables, line->content, index);
+
+    return currentState(line);
+}
+
+/* Process an input line that represent data storage directive */
+void processDataStorageDirective(char *label, newLine *line, directiveType type, bool labelSet, int index, symbolTable *symTable, dataTable *dataImage, long *DC)
 {
     int numOfDataVariables = 0;
     void *dataArray = NULL;
 
     /* Checks if the line's syntax and operands are valid according to the directive type. */
-    if(dataStorageDirectiveLineIsValid(line, type, contentIndex, &numOfDataVariables, &dataArray))
+    if(dataStorageDirective(line, type, index, &numOfDataVariables, &dataArray) == VALID)
     {
         /* If there is a label in the start of the line that isn't defined, add it to the symbol table */
         if(labelSet == TRUE)
         {
-            if(labelIsDefined(label, *symTable, line, data) == FALSE)
+            if(labelIsDefined(label, line, *symTable, data) == FALSE)
                 addToSymbolTable(symTable, label, *DC, data);
         }
         /* Adds the received data to the data image linked list and continues to the next line.*/
@@ -221,21 +247,22 @@ void processDataStorageDirective(char *label, newLine *line, directiveType type,
     }
 }
 
-void processDirective(directiveWord *directiveToken, bool labelSet, newLine *line, int *contentIndex, long *DC, symbolTable *symTable, dataTable *dataImage, char *label)
+/* Processes an input line that represent a directive */
+void processDirective(directiveWord *directToken, bool labelSet, newLine *line, int *index, long *DC, symbolTable *symTab, dataTable *dImage, char *label)
 {
-    if(directiveNameIsValid(line, directiveToken))
+    if(directiveName(line, directToken) == VALID)
     {
         /* Checks if the directive word is '.dh'/ '.dw'/ '.db'/ '.asciz' */
-        if(isDataStorageDirective(directiveToken->value))
-            processDataStorageDirective(label, line, directiveToken->value, labelSet, *contentIndex, symTable, dataImage, DC);
+        if(isDataStorageDirective(directToken->value))
+            processDataStorageDirective(label, line, directToken->value, labelSet, *index, symTab, dImage, DC);
 
         /* If the directive is '.entry' skip it(this directive will be handled in the second pass)  */
-        if(directiveToken->value == EXTERN)
+        if(directToken->value == EXTERN)
         {
-            getLabelName(line->content, contentIndex, label);
+            getLabelName(line->content, index, label);
             /*If the label isn't defined yet, add it to the symbol table as 'extern' */
-            if(labelIsValid(line,label) && !labelIsDefined(label, *symTable, line, external))
-                addToSymbolTable(symTable, label, 0, external);
+            if(labelIsValid(line,label) && !labelIsDefined(label, line, *symTab, external))
+                addToSymbolTable(symTab, label, 0, external);
         }
     }
 }

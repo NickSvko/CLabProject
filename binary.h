@@ -6,11 +6,13 @@
 #include "lineHandling.h"
 #include "tables.h"
 
+/* Function prototypes */
+void checkLineBinaryEncoding(newLine *line, symbolTable symTable, codeTable cTable, instructionWord *instructionToken, symbolTable *label);
+void completeLineBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line);
+void completeIBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line);
+void completeJBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line);
 
 
-void updateLineBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line);
-void completeBinaryEncoding(newLine *line, symbolTable symTable, codeTable table, instructionWord *instructionToken,
-                            symbolTable *label);
 
 
 
