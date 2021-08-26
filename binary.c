@@ -13,11 +13,11 @@ void completeIBinaryEncoding(symbolTable label, codeTable table, instructionWord
     /* Finds in the code table the instruction to which the binary encoding need to be completed */
     for(currentEntry = table; currentEntry != NULL; currentEntry = currentEntry->next)
     {
-        if(currentEntry->type == I && currentEntry -> data -> typeI -> opcode == instructionToken->opcode)
+        if(currentEntry->type == I && currentEntry -> data -> typeI.opcode == instructionToken->opcode)
         {
             /* If the type to be set in the 'immed' field is valid  */
             if(getAddress(line, currentEntry->address, label, instructionToken->type, &address) == VALID)
-                currentEntry -> data -> typeI -> immed = (int)address;
+                currentEntry -> data -> typeI.immed = (int)address;
             break;
         }
     }
@@ -32,13 +32,13 @@ void completeJBinaryEncoding(symbolTable label, codeTable table, instructionWord
     /* Finds in the code table the instruction to which the binary encoding need to be completed */
     for(currentEntry = table; currentEntry != NULL; currentEntry = currentEntry->next)
     {
-        if(currentEntry->type == J && currentEntry -> data -> typeJ -> opcode == instructionToken->opcode)
+        if(currentEntry->type == J && currentEntry -> data -> typeJ.opcode == instructionToken->opcode)
         {
             /* Saves the instruction address, we'll need it later if the current label is extern */
             instructionToken->address = currentEntry->address;
             /* If the type to be set in the 'address' field is valid  */
             if(getAddress(line, currentEntry->address, label, instructionToken->type, &address) == VALID)
-                currentEntry -> data -> typeJ -> address = address;
+                currentEntry -> data -> typeJ.address = address;
             break;
         }
     }

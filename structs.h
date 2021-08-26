@@ -71,9 +71,9 @@ typedef struct typeJInstruction
 /* Bit fields that defined by instruction type */
 typedef union codeType
 {
-    typeRInstruction *typeR;
-    typeIInstruction *typeI;
-    typeJInstruction *typeJ;
+    typeRInstruction typeR;
+    typeIInstruction typeI;
+    typeJInstruction typeJ;
 } codeType;
 
 typedef struct symbolTableEntry* symbolTable;

@@ -14,12 +14,17 @@ void skipToTheNextLine(FILE *fileDescriptor)
     while(temp != '\n' && temp != EOF);
 }
 
-/* Checks if a line from the input is not too long, and return line state - valid/invalid */
-state lineLength(const char *inputLine, newLine *line)
+/*
+ * Checks whether the line length is valid and returns the line state - valid/invalid,
+ * if the line length is invalid, saves an error and skips to the next line
+ */
+state lineLength(const char *inputLine, newLine *line, FILE *fd)
 {
     if(strchr(inputLine,'\n') == NULL)
-        line->error = addError("line is too long");
-
+	{
+		line->error = addError("line is too long");
+		skipToTheNextLine(fd);
+	}
     return currentState(line);
 }
 

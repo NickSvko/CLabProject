@@ -29,7 +29,7 @@ char *addError(char *error)
 /* Prints the first error received in the current line, and frees the memory allocated to the error */
 void printLineError(newLine *line)
 {
-    fprintf(stderr,"Error. file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
+    fprintf(stderr,"Error! file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
     free(line->error);
 }
 

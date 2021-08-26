@@ -6,7 +6,7 @@
 
 /* Function prototypes */
 void skipToTheNextLine(FILE *fileDescriptor);
-state lineLength(const char *inputLine, newLine *line);
+state lineLength(const char *inputLine, newLine *line, FILE *fd);
 bool emptyLine(const char *lineContent, int currentIndex);
 bool commentLine(const char *lineContent, int *currentIndex);
 void printLineError(newLine *line);

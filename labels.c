@@ -43,7 +43,7 @@ bool labelIsDefined(char *label, newLine *line, symbolTable head, imageType type
     return isDefined;
 }
 
-/* Checks whether the label name is a reserved word that represents a directive or instruction */
+/* Checks whether the label name is a reserved word that represents a directive or an instruction */
 bool labelNameIsReservedWord(char *label)
 {
     int i, j, numberOfInstructions, numberOfDirectives; /* The total numbers of the reserved directives and instructions */
@@ -61,7 +61,7 @@ bool labelNameIsReservedWord(char *label)
             isReserved = TRUE;
     }
     /* Looking for a match between the label name and one of the directives name */
-    for(j = 0; j < numberOfDirectives && isReserved == FALSE; i++)
+    for(j = 0; j < numberOfDirectives && isReserved == FALSE; j++)
     {
         if(strcmp(label, directive[i].name) == 0)
             isReserved = TRUE;
@@ -116,7 +116,7 @@ void getLabelName(const char *content, int *index, char *label)
 
     /* Scans the label */
     while(!isWhiteSpace(content[*index]))
-        label[i++] = content[(*index++)];
+        label[i++] = content[(*index)++];
 
     label[i] = '\0'; /* End of string */
 }

@@ -45,11 +45,11 @@ state checkForComma(newLine *line, int *index, int numOfVariables)
 void checkInteger(newLine *line, int *contentIndex, int *numOfVariables, int maxNumLength, int minVal, int maxVal)
 {
     int numValue;
-    char numString[maxNumLength + 1];
+    char numString[maxNumLength + 2];
 
     numValue = scanInt(line->content, contentIndex, numString, maxNumLength);
 
-    if(!intIsValid(numString, numValue, maxVal, minVal, maxNumLength))
+    if(!intIsValid(numString, numValue, maxVal, minVal))
         line->error = addError("Invalid operand, Operand must be an integer in the range defined by the command");
     else
         (*numOfVariables)++;
@@ -59,17 +59,17 @@ void checkInteger(newLine *line, int *contentIndex, int *numOfVariables, int max
 void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands)
 {
     int registerNum;
-    char registerString[maxRegisterLength + 1];
+    char registerString[maxRegisterLength + 2];
     state registerState = VALID;
 
     /* Check that the first char of the current word is '$' and the second is (or a start of) a number */
-    if(line->content[*contentIndex] != '$' && !isdigit(line->content[(*contentIndex) + 1]))
+    if(line->content[*contentIndex] != '$' || !isdigit(line->content[(*contentIndex) + 1]))
         registerState = INVALID;
     else
     {
         (*contentIndex)++; /* skips to the start of the register number */
         registerNum = scanInt(line->content, contentIndex, registerString, maxRegisterLength);
-        if(!intIsValid(registerString, registerNum, maxRegister, minRegister, maxRegisterLength))
+        if(!intIsValid(registerString, registerNum, maxRegister, minRegister))
             registerState = INVALID;
     }
     if(registerState == INVALID)
@@ -79,21 +79,27 @@ void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands)
 }
 
 /* checks if the amount of operands is bigger than the valid amount for the given instruction, if so, adds an error */
-void checkOperandsAmount(newLine *line, unsigned int opcode, int numOfOperands)
+void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfOperands, bool endOfScan)
 {
-    if(opcode == 0 && numOfOperands != 3)
+	bool threeOperandsError, twoOperandsError, oneOperandError;
+
+	threeOperandsError = (!endOfScan && numOfOperands > 3) || (endOfScan && numOfOperands < 3);
+	twoOperandsError = (!endOfScan && numOfOperands > 2) || (endOfScan && numOfOperands < 2);
+	oneOperandError = (!endOfScan && numOfOperands > 1) || (endOfScan && numOfOperands < 1);
+
+    if(opcode == 0 && threeOperandsError)
         line->error = addError("Incorrect number of registers.'R' arithmetic and logical instructions should receive 3 registers");
 
-    else if(opcode == 1 && numOfOperands != 2)
+    else if(opcode == 1 && twoOperandsError)
         line->error = addError("Incorrect number of registers.'R' copy instructions should receive 2 registers");
 
-    else if((opcode >= 10 && opcode <= 14) || (opcode >= 19 && opcode <= 24) && numOfOperands != 3)
+    else if(((opcode >= 10 && opcode <= 14) || (opcode >= 19 && opcode <= 24)) && threeOperandsError)
         line->error = addError("Incorrect number of operands.'I' copy/loading/saving memory instructions should receive 3 operands");
 
-    else if(opcode >= 15 && opcode <= 18 && numOfOperands != 3)
+    else if((opcode >= 15 && opcode <= 18) && threeOperandsError)
         line->error = addError("Incorrect number of operands.'I' Conditional branching instructions should receive 3 operands");
 
-    else if((opcode == 30 || opcode == 31 || opcode == 32) && numOfOperands != 1)
+    else if((opcode == 30 || opcode == 31 || opcode == 32) && oneOperandError)
         line->error = addError("Incorrect number of operands, jump instruction should receive only one operand");
 }
 
@@ -101,7 +107,7 @@ void checkOperandsAmount(newLine *line, unsigned int opcode, int numOfOperands)
 int get2BytesInt(const char *content, int *index)
 {
     int intValue;
-    char intString[max2BytesIntLength];
+    char intString[max2BytesIntLength + 2];
 
     intValue = scanInt(content, index, intString, max2BytesIntLength);
 
@@ -112,7 +118,7 @@ int get2BytesInt(const char *content, int *index)
 int getRegister(const char *content, int *index)
 {
     int registerNum;
-    char registerString[maxRegisterLength];
+    char registerString[maxRegisterLength + 2];
 
     for(; content[*index] != '$'; (*index)++ );  /* Continues until encountering the beginning of a register */
 
@@ -137,35 +143,42 @@ bool isRegister(const char *content, int index)
 /* Extracts an integer from the given line */
 int scanInt(const char *content, int *contentIndex, char *numString, int maxLength)
 {
-    int numberValue;
+    int numValue;
     int i = 0;
 
     skipSpaces(content, contentIndex);
 
     /* Scans the string until encounter separation - space, comma or end of line */
     while(!isspace(content[*contentIndex]) && content[*contentIndex] != ',' && i <= maxLength)
-        numString[i++] = (char)(content[(*contentIndex)++] + '0');
+        numString[i++] = (char)(content[(*contentIndex)++] + '\0');
 
-    numberValue = atoi(numString);
-    return numberValue;
+		numString[i] = '\0'; /* End of string */
+		numValue = atoi(numString);
+
+
+    return numValue;
 }
 
 /* Checks and returns if the given string represent a valid integer in the desired limits */
-bool intIsValid(char *numString, int numValue, int maxValue, int minValue, int maxLength)
+bool intIsValid(char* numString, int numValue, int maxValue, int minValue)
 {
-    int i;
+    int i = 0;
     bool isValid = TRUE;
 
-    /* Checks if the integer is in the proper limits */
-    if(strlen(numString) > maxLength || (numValue > maxValue || numValue < minValue))
-        isValid = FALSE;
+	/* If the first character in 'numString' is a valid mathematical sign */
+	if(numString[i] == '-' || numString[i] == '+')
+		i++;
 
-    for(i = 0; i < strlen(numString) && isValid == TRUE; i++)
+    for(; i < strlen(numString) && isValid == TRUE; i++)
     {
         /* Checks if all the characters of the string that represent the integer are number or mathematical symbols */
-        if(!isdigit(numString[i]) && numString[i] != '-' && numString[i] != '+')
+        if(!isdigit(numString[i]))
             isValid = FALSE;
     }
+
+	/* Checks if the integer is in the proper limits */
+	if(isValid == TRUE && numValue > maxValue || numValue < minValue)
+		isValid = FALSE;
     return isValid;
 }
 

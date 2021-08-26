@@ -71,12 +71,13 @@ state instructionWordState(newLine *line, instructionWord *instructionToken, int
         instructionToken->name[i++] = line->content[(*index)++];
 
     if(i == maxInstructionLength)   /* If the current word is too long to be an instruction */
-        line->error = addError("Invalid instruction word");
+        line->error = addError("Invalid instruction name");
 
-    else { instructionToken->name[i] = '\0'; } /* End of string */
+    else
+        instructionToken->name[i] = '\0'; /* End of string */
 
     if(currentState(line) == VALID && searchInstruction(instructionToken) == INVALID)
-        line->error = addError("Invalid instruction word");
+        line->error = addError("Invalid instruction name");
 
     return currentState(line);
 }
@@ -141,14 +142,16 @@ void checkInstructionSyntax(newLine *line, unsigned int opcode, int contentIndex
     if(opcode == 63 && !emptyLine(line->content, contentIndex))  /* 'stop' instruction validity check */
         line->error = addError("Excessive text after 'stop' instruction");
 
-    while(!(line->error) && line->content[contentIndex] != '\n')
+    while(currentState(line) == VALID && line->content[contentIndex] != '\n')
     {
         if(checkForComma(line,&contentIndex, numOfScannedOperands) == VALID)
-            checkOperandByType(line, opcode, symbol, &contentIndex, NULL);
+            checkOperandByType(line, opcode, symbol, &contentIndex, &numOfScannedOperands);
 
-        if(!(line->error))
-            checkOperandsAmount(line, opcode, numOfScannedOperands);
+		if(currentState(line) == VALID)
+			checkOperandsAmount(line, opcode, numOfScannedOperands, FALSE);
     }
+	if(currentState(line) == VALID)
+		checkOperandsAmount(line, opcode, numOfScannedOperands, TRUE);
 }
 
 /* Checks if the instruction line in valid, and returns its state - valid/invalid */

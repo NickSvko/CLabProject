@@ -121,11 +121,11 @@ void exportCodeImage(codeTable codeImage, FILE *fd)
     for(codeEntry = codeImage; codeEntry != NULL; codeEntry = codeEntry->next)
     {
         if(codeEntry->type == R)
-            word = (unsigned int *)codeEntry->data->typeR;
+            word = (unsigned int *)&codeEntry->data->typeR;
         else if(codeEntry->type == I)
-            word = (unsigned int *)codeEntry->data->typeI;
+            word = (unsigned int *)&codeEntry->data->typeI;
         else if(codeEntry->type == J)
-            word = (unsigned int *)codeEntry->data->typeJ;
+            word = (unsigned int *)&codeEntry->data->typeJ;
 
         fprintf(fd,"%04d %02X %02X %02X %02X\n",codeEntry->address,(*word)&b,(*word)>>8&b,(*word)>>16&b,(*word)>>24&b);
     }
@@ -208,13 +208,20 @@ void createExtAndEntFiles(char *fileName, attributesTable attributesTab)
     free(entryFileName);
 }
 
-/* Creates output files(object,externals,entries) and then frees the data that used to generate this files */
+/*
+ * Creates object, entry, and external files - if there is data to insert into these files,
+ * and then frees the memory that was allocated to the data that used for generate this files
+ */
 void createOutputFiles(char *fileName, codeTable codeImage, dataTable dataImage, attributesTable attributesTab,
                        long ICF, long DCF)
 {
-    createExtAndEntFiles(fileName, attributesTab);
-    createObjectFile(fileName, codeImage, dataImage, ICF, DCF);
-    freeTables(codeImage, dataImage, attributesTab);
+    if(attributesTab != NULL)  /* if there is data to insert into 'ext'/'ent' files */
+        createExtAndEntFiles(fileName, attributesTab);
+
+    if(dataImage != NULL || codeImage != NULL) /* if there is data to insert into 'ob' file */
+        createObjectFile(fileName, codeImage, dataImage, ICF, DCF);
+
+    freeTables(codeImage, dataImage, attributesTab); /* frees the data that was used to create the output files */
 }
 
 

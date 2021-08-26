@@ -12,7 +12,7 @@ int getSizeOfDataVariable(directiveType type);
 void addToDataImage(directiveType type, int numOfVariables, long *DC, void *dataArray, dataTable *table);
 void setCodeEntryValues(const char *content, int index, instructionWord instructionToken, long IC, codeTable newEntry);
 void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeTable *table, long *IC);
-void setCodeDataBitfield(const char *content, int index, instructionWord instructionToken, codeTable newEntry);
+void setCodeEntryBitfield(const char *content, int index, instructionWord instructionToken, codeTable newEntry);
 void setRBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry);
 void setIBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry) ;
 void setJBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry);

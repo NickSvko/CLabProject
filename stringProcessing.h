@@ -8,13 +8,13 @@ bool isAlphanumeric(const char *symbol);
 state checkForComma(newLine *line, int *index, int numOfVariables);
 void checkInteger(newLine *line, int *contentIndex, int *numOfVariables, int maxNumLength, int minVal, int maxVal);
 void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands);
-void checkOperandsAmount(newLine *line, unsigned int opcode, int numOfOperands);
+void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfOperands, bool endOfScan);
 int getRegister(const char *content, int *index);
 int get2BytesInt(const char *content, int *index);
 bool isRegister(const char *content, int index);
 char * getFileFullName(char *fileName, char *fileExtension);
 int scanInt(const char *content, int *contentIndex, char *numString, int maxLength);
-bool intIsValid(char *numString, int numValue, int maxValue, int minValue, int maxLength);
+bool intIsValid(char* numString, int numValue, int maxValue, int minValue);
 
 
 

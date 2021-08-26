@@ -14,7 +14,6 @@ void extractLabelFromLine(char *symbol, const char *content, int index);
 state getLabelFromTable(newLine *line, char *symbol, symbolTable *label, symbolTable table);
 void checkForLabelSetting(newLine *line, char *symbol, int *contentIndex, bool *labelSetting);
 void defineLabelAsEntry(newLine *line, symbolTable symbolTab, int *index, char *label);
-
-
+bool labelNameIsReservedWord(char *label);
 
 #endif //UNTITLED_LABELS_H

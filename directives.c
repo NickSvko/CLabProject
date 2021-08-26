@@ -121,7 +121,9 @@ void scanDVariableToArray(const char *content, int index, directiveType type, vo
 
         /* Scans the number encountered */
         while(!isspace(content[index]) && content[index] != ',')
-            numString[i++] = (char)(content[index++] + '0');
+            numString[i++] = (char)(content[index++] + '\0');
+
+		numString[i] = '\0'; /* End of string */
 
         /* If a number has been found */
         if(i != 0)
@@ -171,13 +173,13 @@ void createDataArray(directiveType type, void **dataArray, int numOfVariables, c
  */
 void checkAscizCharValidity(newLine *line, int contentIndex, int *numOfVariables, bool inQuotes)
 {
-    /* If a char is not spacing or new line and is out of string */
+    /* If there is a not-white-space character outside the quotes */
     if(!inQuotes && !isWhiteSpace(line->content[contentIndex]))
         line -> error = addError("The string is not bounded by quotes");
 
     if(inQuotes)
     {
-        if(!isprint(line->content[contentIndex]))   /* If char is in quotes and isn't printable. */
+        if(!isprint(line->content[contentIndex]) )   /* If char is in quotes and isn't printable. */
             line->error = addError("String contain char that cannot be printed");
         else
             (*numOfVariables)++;
@@ -190,14 +192,20 @@ void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariable
     bool inQuotes = FALSE;  /* Indicates whether the current character is in or out of quotes. */
 
     /* Checks the validity on each character in the input line */
-    for(; line -> content[contentIndex] != '\n' && !(line->error); contentIndex++)
+    for(; line -> content[contentIndex] != '\n' && currentState(line) == VALID; contentIndex++)
     {
         if(line->content[contentIndex] == '"')
+        {
             inQuotes = !inQuotes;
-
+            contentIndex++; /* Skips quotes character */
+        }
         checkAscizCharValidity(line, contentIndex, numOfVariables, inQuotes);
     }
-    if(!(line->error))  /* If no error was found, increasing number of variables by one for '\0' character */
+    /* If the line ends with open quotes */
+    if(currentState(line) == VALID && inQuotes && line->content[contentIndex] == '\n')
+        line -> error = addError("The string is not bounded by quotes");
+
+    if(currentState(line) == VALID) /* If no error was found, increases number of variables by one for '\0' character */
         (*numOfVariables)++;
 }
 
@@ -205,7 +213,7 @@ void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariable
 void checkDTypeDirectiveLine(newLine *line, directiveType thisDirective, int contentIndex, int *numOfVariables)
 {
     /* While no error is found, check line's validation. */
-    while (!(line->error) && line->content[contentIndex] != '\n')
+    while (currentState(line) == VALID && line->content[contentIndex] != '\n')
     {
         /* If comma is missing or appearing in wrong place. */
         if(checkForComma(line, &contentIndex, *numOfVariables) == INVALID)
