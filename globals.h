@@ -5,7 +5,7 @@
 /* Maximum line length from source file - not including '\n' */
 #define maxLineLength 80
 
-/* Initial the value of IC(instruction counter) */
+/* Initial the type of IC(instruction counter) */
 #define ICInitialValue 100
 
 #define maxLabelLength 31

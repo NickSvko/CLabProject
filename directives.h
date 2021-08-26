@@ -2,23 +2,13 @@
 #ifndef UNTITLED_DIRECTIVES_H
 #define UNTITLED_DIRECTIVES_H
 
-
-static directiveWord directive[7] =
-        {
-                {".dh", DH},
-                {".dw", DW},
-                {".db", DB},
-                {".asciz", ASCIZ},
-                {".entry", ENTRY},
-                {".extern", EXTERN},
-                {"", NONE }
-        };
+#include "structs.h"
 
 /* Function prototypes */
-void getDirectiveWord(const char *lineContent, char *directiveName, int *contentIndex);
+void scanDirectiveName(const char *lineContent, char *directiveName, int *contentIndex);
 bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex);
-state directiveName(newLine *line, directiveWord  *directiveToken);
-bool isDataStorageDirective(directiveType thisDirective);
+state searchDirective(newLine *line, directiveWord  *directiveToken);
+bool isDataStorageDirective(directiveType type);
 void enterVariableByType(directiveType type, const void *dataArray, int *arrayIndex, char *numString);
 void scanDVariableToArray(const char *content, int index, directiveType type, void *dataArray);
 void scanAscizVariableToArray(const char *content, int index, char *dataArray);
@@ -30,6 +20,7 @@ void checkDirectiveByType(newLine *line, directiveType type, int index, int *num
 state dataStorageDirective(newLine *line, directiveType type, int index, int *numOfVariables, void **dataArray);
 void processDataStorageDirective(char *label, newLine *line, directiveType type, bool labelSet, int index, symbolTable *symTable, dataTable *dataImage, long *DC);
 void processDirective(directiveWord *directToken, bool labelSet, newLine *line, int *index, long *DC, symbolTable *symTab, dataTable *dImage, char *label);
+directiveWord *getReservedDirectives(int *numberOfDirectives);
 
 
 

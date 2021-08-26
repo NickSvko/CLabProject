@@ -4,6 +4,7 @@
 #include "labels.h"
 #include "binary.h"
 #include "directives.h"
+#include "general.h"
 
 /* Performs a second pass on a single line from the input file */
 state lineSecondPass(newLine *line, symbolTable symbolTab, codeTable codeImage, attributesTable *attributesTab)

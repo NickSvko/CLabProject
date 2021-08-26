@@ -1,7 +1,7 @@
 #ifndef UNTITLED_UTILS_H
 #define UNTITLED_UTILS_H
 
-#include "general.h"
+#include "structs.h"
 
 /* Function prototypes */
 bool isAlphanumeric(const char *symbol);

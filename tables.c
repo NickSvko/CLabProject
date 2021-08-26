@@ -1,8 +1,8 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "tables.h"
 #include "stringProcessing.h"
+#include "general.h"
 
 
 /* Sets the values of a new entry of symbols linked list */
@@ -79,71 +79,13 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
     newEntry = callocWithCheck(sizeof(dataImageEntry));
 
     setDataEntryValues(type, numOfVariables, *DC, dataArray, sizeofVariable, newEntry);
-    (*DC) += newEntry->dataSize;  /* Increases the value of DC according to the data obtained */
+    (*DC) += newEntry->dataSize;  /* Increases the type of DC according to the data obtained */
 
     if((*table) == NULL)  /* If the table is empty */
         (*table) = newEntry;
 
     else  /* Defines the new node to be the last */
     {
-        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
-        tempEntry -> next = newEntry;
-    }
-}
-
-/* Sets the values of a new code image entry */
-void setCodeEntryValues(const char *content, int index, instructionWord instructionToken, long IC, codeTable newEntry)
-{
-    setCodeDataBitfield(content, index, instructionToken, newEntry);
-    newEntry -> address = (int)IC;
-    newEntry -> type = instructionToken.type;
-    newEntry -> next = NULL;
-}
-
-/* Adds a new entry to code image linked list */
-void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeTable *table, long *IC)
-{
-    codeTable newEntry, tempEntry;
-
-    newEntry = callocWithCheck(sizeof(codeImageEntry));
-    setCodeEntryValues(content, index, instructionToken, *IC, newEntry);
-    (*IC) += 4;
-
-    if((*table) == NULL) /* If the table is empty */
-        (*table) = newEntry;
-    else
-    {
-        /* Defines the new node to be the last */
-        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
-        tempEntry -> next = newEntry;
-    }
-}
-
-/* Sets the values of a new attribute entry */
-void setAttributeEntryValues(imageType type, long address, attributesTable newEntry, char *currentName)
-{
-    newEntry -> name = currentName;
-    newEntry -> type = type;
-    newEntry -> address = address;
-    newEntry -> next = NULL;
-}
-
-/* Adds a new entry to attributes linked list */
-void addToAttributesTable(char *name, imageType type, long address, attributesTable *table)
-{
-    attributesTable newEntry, tempEntry;
-    char *currentName;
-
-    newEntry = (attributesTable) callocWithCheck(sizeof(attributesTableEntry));
-    currentName = (char *) callocWithCheck(strlen(name) + 1);
-    strcpy(currentName, name);
-    setAttributeEntryValues(type, address, newEntry, currentName);
-
-    if((*table) == NULL)  /* If the table is empty */
-        (*table) = newEntry;
-    else
-    {
-        /* Defines the new node to be the last */
         for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
         tempEntry -> next = newEntry;
     }
@@ -204,6 +146,64 @@ void setCodeDataBitfield(const char *content, int index, instructionWord instruc
 
     else if(instructionToken.type == J)
         setJBitField(content, &index, &instructionToken, newEntry);
+}
+
+/* Sets the values of a new code image entry */
+void setCodeEntryValues(const char *content, int index, instructionWord instructionToken, long IC, codeTable newEntry)
+{
+    setCodeDataBitfield(content, index, instructionToken, newEntry);
+    newEntry -> address = (int)IC;
+    newEntry -> type = instructionToken.type;
+    newEntry -> next = NULL;
+}
+
+/* Adds a new entry to code image linked list */
+void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeTable *table, long *IC)
+{
+    codeTable newEntry, tempEntry;
+
+    newEntry = callocWithCheck(sizeof(codeImageEntry));
+    setCodeEntryValues(content, index, instructionToken, *IC, newEntry);
+    (*IC) += 4;
+
+    if((*table) == NULL) /* If the table is empty */
+        (*table) = newEntry;
+    else
+    {
+        /* Defines the new node to be the last */
+        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
+        tempEntry -> next = newEntry;
+    }
+}
+
+/* Sets the values of a new attribute entry */
+void setAttributeEntryValues(imageType type, long address, attributesTable newEntry, char *currentName)
+{
+    newEntry -> name = currentName;
+    newEntry -> type = type;
+    newEntry -> address = address;
+    newEntry -> next = NULL;
+}
+
+/* Adds a new entry to attributes linked list */
+void addToAttributesTable(char *name, imageType type, long address, attributesTable *table)
+{
+    attributesTable newEntry, tempEntry;
+    char *currentName;
+
+    newEntry = (attributesTable) callocWithCheck(sizeof(attributesTableEntry));
+    currentName = (char *) callocWithCheck(strlen(name) + 1);
+    strcpy(currentName, name);
+    setAttributeEntryValues(type, address, newEntry, currentName);
+
+    if((*table) == NULL)  /* If the table is empty */
+        (*table) = newEntry;
+    else
+    {
+        /* Defines the new node to be the last */
+        for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
+        tempEntry -> next = newEntry;
+    }
 }
 
 /* Adds all the labels that marked as 'entry' to the attributes table */

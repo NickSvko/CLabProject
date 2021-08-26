@@ -2,7 +2,6 @@
 #define UNTITLED_LINEHANDLING_H
 
 #include <stdio.h>
-#include "globals.h"
 #include "structs.h"
 
 /* Function prototypes */

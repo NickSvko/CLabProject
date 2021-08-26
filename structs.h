@@ -17,14 +17,14 @@ typedef struct instructionWord
     unsigned int opcode;
     unsigned int funct;
     instructionType type;
-    /* The value of the instruction */
+    /* The type of the instruction */
     long address;
 } instructionWord;
 
 typedef struct directiveWord
 {
     char name[maxDirectiveName];
-    directiveType value;
+    directiveType type;
 } directiveWord;
 
 /* Representation of R-type instructionWord binary structure */
@@ -47,7 +47,7 @@ typedef struct typeRInstruction
 /* Representation of I-type instructionWord binary structure */
 typedef struct typeIInstruction
 {
-    /* Fixed/immediate value, bits: 15-0 */
+    /* Fixed/immediate type, bits: 15-0 */
     signed int immed: 16;
     /* Second register, bits: 20-16 */
     unsigned int rt: 5;
@@ -60,7 +60,7 @@ typedef struct typeIInstruction
 /* Representation of J-type instructionWord binary structure */
 typedef struct typeJInstruction
 {
-    /* value, bits: 24-0 */
+    /* type, bits: 24-0 */
     unsigned int address: 25;
     /* reg, bit: 25 */
     unsigned int reg: 1;
@@ -121,7 +121,7 @@ typedef struct attributesTableEntry
     imageType type;
     /* The name of the label */
     char *name;
-    /* The value of the label(if entry) or of the instruction(if) extern */
+    /* The type of the label(if entry) or of the instruction(if) extern */
     long address;
     struct attributesTableEntry *next;
 } attributesTableEntry;

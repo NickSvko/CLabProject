@@ -1,9 +1,8 @@
 
-#include "structs.h"
-#include "globals.h"
-#include "lineHandling.h"
-#include "instructions.h"
-#include "labels.h"
+#include <stdio.h> /* For 'NULL' */
+#include "instructions.h" /* For 'getInstruction', 'instructionWithLabelOperand' functions*/
+#include "labels.h" /* For 'extractLabelFromLine', 'extractLabelFromLine' functions */
+
 
 /* Completes the binary encoding of line that represents type 'I' instruction */
 void completeIBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line)
@@ -16,7 +15,7 @@ void completeIBinaryEncoding(symbolTable label, codeTable table, instructionWord
     {
         if(currentEntry->type == I && currentEntry -> data -> typeI -> opcode == instructionToken->opcode)
         {
-            /* If the value to be set in the 'immed' field is valid  */
+            /* If the type to be set in the 'immed' field is valid  */
             if(getAddress(line, currentEntry->address, label, instructionToken->type, &address) == VALID)
                 currentEntry -> data -> typeI -> immed = (int)address;
             break;
@@ -37,7 +36,7 @@ void completeJBinaryEncoding(symbolTable label, codeTable table, instructionWord
         {
             /* Saves the instruction address, we'll need it later if the current label is extern */
             instructionToken->address = currentEntry->address;
-            /* If the value to be set in the 'address' field is valid  */
+            /* If the type to be set in the 'address' field is valid  */
             if(getAddress(line, currentEntry->address, label, instructionToken->type, &address) == VALID)
                 currentEntry -> data -> typeJ -> address = address;
             break;

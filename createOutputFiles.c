@@ -1,8 +1,7 @@
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "files.h"
-#include "tables.h"
+#include <stdlib.h> /* For 'free' function */
+#include "files.h" /* For 'getFileFullName', 'openFile' functions and <stdio.h> functions */
+#include "tables.h" /* For 'freeTables' function */
 
 /* Returns if the last byte of the variable is the only byte that left to be printed */
 bool lastByteLeftToPrint(directiveType type,int readBytes)

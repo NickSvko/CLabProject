@@ -1,7 +1,6 @@
 
-#include "files.h"
-#include "createOutputFiles.h"
-
+#include "files.h" /* For 'fileIsValid' function */
+#include "createOutputFiles.h" /* For 'createOutputFiles' function */
 
 /*
  * Receives between 1 and 3 input files from command line, written in an imaginary assembly language,

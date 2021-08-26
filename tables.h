@@ -2,8 +2,7 @@
 #ifndef UNTITLED_TABLES_H
 #define UNTITLED_TABLES_H
 
-
-#include "general.h"
+#include "structs.h"
 
 /* Function prototypes */
 void setSymbolTableEntryValues(long address, imageType type, symbolTable newEntry, char *labelName);

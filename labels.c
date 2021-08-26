@@ -3,6 +3,7 @@
 #include <ctype.h> /* For isalpha() */
 #include "stringProcessing.h"
 #include "instructions.h"
+#include "directives.h"
 #include "general.h"
 #include "lineHandling.h"
 
@@ -42,22 +43,47 @@ bool labelIsDefined(char *label, newLine *line, symbolTable head, imageType type
     return isDefined;
 }
 
+/* Checks whether the label name is a reserved word that represents a directive or instruction */
+bool labelNameIsReservedWord(char *label)
+{
+    int i, j, numberOfInstructions, numberOfDirectives; /* The total numbers of the reserved directives and instructions */
+    directiveWord *directive;
+    instructionWord *instruction;
+    bool isReserved = FALSE;
+
+    directive = getReservedDirectives(&numberOfDirectives);
+    instruction = getReservedInstructions(&numberOfInstructions);
+
+    /* Looking for a match between the label name and one of the instructions name */
+    for(i = 0; i < numberOfInstructions && isReserved == FALSE; i++)
+    {
+        if(strcmp(label, instruction[i].name) == 0)
+            isReserved = TRUE;
+    }
+    /* Looking for a match between the label name and one of the directives name */
+    for(j = 0; j < numberOfDirectives && isReserved == FALSE; i++)
+    {
+        if(strcmp(label, directive[i].name) == 0)
+            isReserved = TRUE;
+    }
+    return isReserved;
+}
+
 /* Checks the validation of a label, and returns its state - valid/invalid */
 state labelIsValid(newLine *line, char *label)
 {
-    int i, numberOfInstructions;
-    numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
-
-    /* Check if the label name is syntactically correct */
+    /*
+     * Check if the label name is syntactically correct -
+     * Does not exceed the maximum length of a label name, the first character is a letter,
+     * contain only letters and numbers.
+     */
     if(strlen(label) > maxLabelLength || !isalpha(label[0]) || !isAlphanumeric(label))
         line->error = addError("label's name syntactically incorrect");
 
-    /* Check if label's name is a reserved instructionWord word - no need to check directive words(starts with '.' ) */
-    for(i = 0; i < numberOfInstructions && !(line->error); i++)
-    {
-        if(strcmp(label, instruction[i].name) == 0)
-            line-> error = addError("invalid label, the label name is a reserved instructionWord word");
-    }
+    /* Check if the label name is a reserved instruction or directive word */
+    if(labelNameIsReservedWord(label))
+        line-> error = addError("invalid label, the label name is a reserved instructionWord word");
+
     return currentState(line);
 }
 

@@ -1,16 +1,16 @@
 
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include "stringProcessing.h"
-#include "directives.h"
-#include "general.h"
-#include "labels.h"
-#include "tables.h"
-#include "lineHandling.h"
+#include <string.h> /* For 'strcmp' function */
+#include <stdlib.h> /* For 'atoi' function */
+#include <ctype.h> /* For 'isspace', 'isprint' functions */
+#include "stringProcessing.h" /* For 'checkForComma', 'checkInteger' functions */
+#include "directives.h" /* For 'directive' table */
+#include "general.h" /* For 'isWhiteSpace', 'skipSpaces', 'addError', 'currentState', 'callocWithCheck' functions */
+#include "labels.h" /* For 'labelIsDefined', 'labelIsValid', 'getLabelName' functions*/
+#include "tables.h" /* For 'addToSymbolTable', 'addToDataImage' functions*/
+#include "lineHandling.h" /* For 'emptyLine' function*/
 
 /* Scans the current directive word from the input line */
-void getDirectiveWord(const char *lineContent, char *directiveName, int *contentIndex)
+void scanDirectiveName(const char *lineContent, char *directiveName, int *contentIndex)
 {
     int nameIndex = 0;
 
@@ -32,28 +32,50 @@ bool isDirective(const char *lineContent, directiveWord *directiveToken, int *co
     /* If the first char of the current word is '.' than it's a directive word declaration. */
     if (lineContent[i] == '.')
     {
-        getDirectiveWord(lineContent, directiveToken->name, &i);
+        i++; /* Skips the dot to the beginning of the directive name */
+        scanDirectiveName(lineContent, directiveToken->name, &i);
         (*contentIndex) = i;
         directiveDefinition = TRUE;
     }
     return directiveDefinition;
 }
 
+/* Returns the number and the list of all the reserved directives, with their name, opcode, funct and type */
+directiveWord *getReservedDirectives(int *numberOfDirectives)
+{
+    static directiveWord directive[7] =
+            {
+                    {"dh", DH},
+                    {"dw", DW},
+                    {"db", DB},
+                    {"asciz", ASCIZ},
+                    {"entry", ENTRY},
+                    {"extern", EXTERN},
+                    {"", NONE }
+            };
+
+    *numberOfDirectives = sizeof(directive) / sizeof(directive[0]);
+    return directive;
+}
+
 /*
  * Checks if the current word matches to one of the available directive words,
- * if a match is found returns word  is valid, else, returns invalid.
+ * if a match is found , saves the directive type and returns directive is valid, else, returns invalid.
  */
-state directiveName(newLine *line, directiveWord  *directiveToken)
+state searchDirective(newLine *line, directiveWord  *directiveToken)
 {
-    /* The total number of the possible directive words */
-    int numberOfDirectives = sizeof(directive) / sizeof(directive[0]);
-    int i;
-    /* Searches for a match between the given word and one of the directive words, if found stops the loop */
+    int i, numberOfDirectives; /* numberOfDirectives = The total number of the reserved directives */
+    directiveWord *directive;
+
+    directive = getReservedDirectives(&numberOfDirectives);
+
+    /* Searches for a match between the current word and one of the directives name */
     for(i = 0; i < numberOfDirectives; i++)
     {
+        /* if a match is found saves the matched directive type and stops */
         if(strcmp(directiveToken->name, directive[i].name) == 0)
         {
-            directiveToken->value = directive[i].value;
+            directiveToken->type = directive[i].type;
             break;
         }
     }
@@ -64,9 +86,9 @@ state directiveName(newLine *line, directiveWord  *directiveToken)
 }
 
 /* Checks by the name of the directive whether it's a data storage directive, and returns the conclusion */
-bool isDataStorageDirective(directiveType thisDirective)
+bool isDataStorageDirective(directiveType type)
 {
-    if(thisDirective == DH || thisDirective == DW || thisDirective == DB || thisDirective == ASCIZ)
+    if(type == DH || type == DW || type == DB || type == ASCIZ)
         return TRUE;
     return FALSE;
 }
@@ -250,14 +272,14 @@ void processDataStorageDirective(char *label, newLine *line, directiveType type,
 /* Processes an input line that represent a directive */
 void processDirective(directiveWord *directToken, bool labelSet, newLine *line, int *index, long *DC, symbolTable *symTab, dataTable *dImage, char *label)
 {
-    if(directiveName(line, directToken) == VALID)
+    if(searchDirective(line, directToken) == VALID)
     {
         /* Checks if the directive word is '.dh'/ '.dw'/ '.db'/ '.asciz' */
-        if(isDataStorageDirective(directToken->value))
-            processDataStorageDirective(label, line, directToken->value, labelSet, *index, symTab, dImage, DC);
+        if(isDataStorageDirective(directToken->type))
+            processDataStorageDirective(label, line, directToken->type, labelSet, *index, symTab, dImage, DC);
 
         /* If the directive is '.entry' skip it(this directive will be handled in the second pass)  */
-        if(directToken->value == EXTERN)
+        if(directToken->type == EXTERN)
         {
             getLabelName(line->content, index, label);
             /*If the label isn't defined yet, add it to the symbol table as 'extern' */

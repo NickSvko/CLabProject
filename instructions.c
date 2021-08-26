@@ -3,10 +3,62 @@
 #include "stringProcessing.h"
 #include "labels.h"
 #include "general.h"
-#include "instructions.h"
 #include "tables.h"
 #include "lineHandling.h"
 
+
+/* Returns the number and the list of all the reserved instructions, with their name, opcode, funct and type */
+instructionWord *getReservedInstructions(int *numberOfInstructions)
+{
+    const  unsigned int noFunct = -1;
+
+    static instructionWord instruction[] = {
+            {"add",  0,  1, R}, {"sub", 0, 2, R},
+            {"and",  0,  3, R}, {"or", 0, 4, R},
+            {"nor",  0,  5, R}, {"move", 1, 1, R},
+            {"mvhi", 1,  2, R}, {"mvlo", 1, 3, R},
+            {"addi", 10, noFunct, I}, {"subi", 11, noFunct, I},
+            {"andi", 12, noFunct, I}, {"ori", 13, noFunct, I},
+            {"nori", 14, noFunct, I}, {"bne", 15, noFunct, I},
+            {"beq",  16, noFunct, I}, {"blt", 17, noFunct, I},
+            {"bgt",  18, noFunct, I}, {"lb", 19, noFunct, I},
+            {"sb",   20, noFunct, I}, {"lw", 21, noFunct, I},
+            {"sw",   22, noFunct, I}, {"lh", 23, noFunct, I},
+            {"sh",   24, noFunct, I}, {"jmp", 30, noFunct, J},
+            {"la",   31, noFunct, J}, {"call", 32, noFunct, J},
+            {"stop", 63, noFunct, J}};
+
+    *numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
+    return instruction;
+}
+
+/*
+ * Searching for a match between the current instruction and one of the available instructions.
+ * If a match is found, updates the values of the instruction token according to matched instruction.
+ */
+state searchInstruction(instructionWord *instructionToken)
+{
+    int i,numberOfInstructions; /* numberOfInstructions = The total number of the available instructions */
+    instructionWord *instruction = getReservedInstructions(&numberOfInstructions);
+
+    /* Searches for a match between the current word and one of the instructions name */
+    for(i = 0; i < numberOfInstructions; i++)
+    {
+        /* if a match is found saves the matched instruction values and stops */
+        if(strcmp(instructionToken->name, instruction[i].name) == 0)
+        {
+            instructionToken->type = instruction[i].type;
+            instructionToken->opcode = instruction[i].opcode;
+
+            if(instructionToken->type == R)
+                instructionToken->funct = instruction[i].funct;
+            break;
+        }
+    }
+    if(i == numberOfInstructions)  /* If no match is found after going over all the instructions  */
+        return INVALID;
+    return VALID;
+}
 
 /* Checks if the current word is a valid instruction word, and returns its state - valid/invalid */
 state instructionWordState(newLine *line, instructionWord *instructionToken, int *index)
@@ -23,52 +75,8 @@ state instructionWordState(newLine *line, instructionWord *instructionToken, int
 
     else { instructionToken->name[i] = '\0'; } /* End of string */
 
-    if(currentState(line) == VALID && findInstruction(instructionToken) == INVALID)
+    if(currentState(line) == VALID && searchInstruction(instructionToken) == INVALID)
         line->error = addError("Invalid instruction word");
-
-    return currentState(line);
-}
-
-/*
- * Searching for a match between the instruction token and one of the instructions.
- * If a match is found, updates the values of the instruction token according to matched instruction.
- */
-state findInstruction(instructionWord *instructionToken)
-{
-    int i,numberOfInstructions; /* numberOfInstructions = The total number of the possible instruction words */
-    numberOfInstructions = sizeof(instruction) / sizeof(instruction[0]);
-    /* Searches for a match between the given word and one of the directive words, if found stops the loop */
-    for(i = 0; i < numberOfInstructions; i++)
-    {
-        if(strcmp(instructionToken->name, instruction[i].name) == 0)
-        {
-            instructionToken->type = instruction[i].type;
-            instructionToken->opcode = instruction[i].opcode;
-
-            if(instructionToken->type == R)
-                instructionToken->funct = instruction[i].funct;
-            break;
-        }
-    }
-    if(i == numberOfInstructions)   /* If no match was found. */
-        return INVALID;
-    return VALID;
-}
-
-/* Checks if the instruction line in valid, and returns its state - valid/invalid */
-state instructionLineState(newLine *line, instructionWord instructionToken, int contentIndex)
-{
-    /* If there is no operands after the instruction , and it's not 'stop' instruction */
-    if(instructionToken.opcode != 63 && emptyLine(line->content, contentIndex))
-        line-> error = addError("Missing Operands.");
-
-    /* If there is no spacing between the instruction and the first operand, and it's not 'stop' instruction */
-    else if (instructionToken.opcode != 63 && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
-        line->error = addError("No spacing between the directive word and the first operand");
-
-    /* If no error was found, executing syntax and operands check for the instruction type */
-    else
-        checkInstructionSyntax(line, instructionToken.opcode, contentIndex);
 
     return currentState(line);
 }
@@ -143,6 +151,24 @@ void checkInstructionSyntax(newLine *line, unsigned int opcode, int contentIndex
     }
 }
 
+/* Checks if the instruction line in valid, and returns its state - valid/invalid */
+state instructionLineState(newLine *line, instructionWord instructionToken, int contentIndex)
+{
+    /* If there is no operands after the instruction , and it's not 'stop' instruction */
+    if(instructionToken.opcode != 63 && emptyLine(line->content, contentIndex))
+        line-> error = addError("Missing Operands.");
+
+    /* If there is no spacing between the instruction and the first operand, and it's not 'stop' instruction */
+    else if (instructionToken.opcode != 63 && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
+        line->error = addError("No spacing between the directive word and the first operand");
+
+    /* If no error was found, executing syntax and operands check for the instruction type */
+    else
+        checkInstructionSyntax(line, instructionToken.opcode, contentIndex);
+
+    return currentState(line);
+}
+
 /* gets the opcode and type of the instruction that appears in the current line */
 void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken)
 {
@@ -155,10 +181,10 @@ void getInstruction(const char *content, int *contentIndex, instructionWord *ins
         instructionToken->name[i++] = content[(*contentIndex)++];
 
     /* Finds the current instruction and save its opcode and type in the instructionToken */
-    findInstruction(instructionToken);
+    searchInstruction(instructionToken);
 }
 
-/* Checks if the current value is valid according to the instruction type, and returns its state - valid/invalid */
+/* Checks if the current type is valid according to the instruction type, and returns its state - valid/invalid */
 state addressState(newLine *line, symbolTable label, instructionType type, long address)
 {
     if(type == I)
@@ -167,26 +193,26 @@ state addressState(newLine *line, symbolTable label, instructionType type, long 
             line->error = addError("Label can't be defined as external in a conditional branching instruction");
 
         else if(address < min2BytesIntVal || address > max2BytesIntVal)  /* Address must be in the 16-bit range */
-            line->error = addError("The label value is not in the correct range for type 'I' instruction");
+            line->error = addError("The label type is not in the correct range for type 'I' instruction");
     }
     /* Address must be in the 25-bit range */
     else if(type == J && (address < min25BitsIntVal || address > max25bitsIntVal))
-        line->error = addError("The label value is not in the correct range for type 'J' instruction");
+        line->error = addError("The label type is not in the correct range for type 'J' instruction");
 
     return currentState(line);
 }
 
-/* Calculates requested value according to the instruction type, and returns if the value in valid or not */
+/* Calculates requested type according to the instruction type, and returns if the type in valid or not */
 state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address)
 {
     /* In 'I' type instruction, The 'immed' field contains the distance between the label and the instruction */
     if(type == I)
         (*address) = label->value - instructionAddress;
 
-    /* In 'J' type instruction, the 'distance' represent the required label's value */
+    /* In 'J' type instruction, the 'distance' represent the required label's type */
     else if(type == J)
     {
-        if(label->isExtern)  /* If label set as external, labels value unknown */
+        if(label->isExtern)  /* If label set as external, labels type unknown */
             (*address) = 0;
         else
             (*address) = label->value;

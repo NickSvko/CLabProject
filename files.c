@@ -1,9 +1,9 @@
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "firstPass.h"
 #include "secondPass.h"
 #include "tables.h"
+#include "general.h"
 
 /* Opens the required file for reading/writing, if the opening fails, prints an error and returns file open invalid */
 state openFile(FILE **fileDescriptor, const char *fileName, char *mode)
@@ -30,8 +30,8 @@ state openFile(FILE **fileDescriptor, const char *fileName, char *mode)
 
 /*
  * Preserves the final values of instruction counter and data counter,
- * and updates in the symbol table the value of each symbol characterized as 'data',
- * and in the data image addresses of all the data, by adding the final value of the instruction counter to them.
+ * and updates in the symbol table the type of each symbol characterized as 'data',
+ * and in the data image addresses of all the data, by adding the final type of the instruction counter to them.
  */
 void updateValues(long *ICF, long *DCF, long IC, long DC, symbolTable symTab, dataTable dataTab)
 {
@@ -42,14 +42,14 @@ void updateValues(long *ICF, long *DCF, long IC, long DC, symbolTable symTab, da
     *ICF = IC;
     *DCF = DC;
 
-    /* Updates in the symbol table the value of each symbol characterized as 'data', by adding the ICF value */
+    /* Updates in the symbol table the type of each symbol characterized as 'data', by adding the ICF type */
     for(symbolEntry = symTab; symbolEntry != NULL; symbolEntry = symbolEntry->next)
     {
         if(symbolEntry->type == data)
             symbolEntry->value += (*ICF);
     }
 
-    /* Updates in the data Image the addresses of all the data by adding the ICF value to each value */
+    /* Updates in the data Image the addresses of all the data by adding the ICF type to each type */
     for(dataEntry = dataTab; dataEntry != NULL; dataEntry = dataEntry->next)
         dataEntry->address += (*ICF);
 
