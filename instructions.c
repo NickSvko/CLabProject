@@ -67,7 +67,7 @@ state instructionWordState(newLine *line, instructionWord *instructionToken, int
 
     skipSpaces(line->content, index);
 
-    while(!isWhiteSpace(line->content[*index]) && i < maxInstructionLength) /* Copies the current word */
+    while(!isWhiteSpace(line->content[*index]) && i <= maxInstructionLength) /* Copies the current word */
         instructionToken->name[i++] = line->content[(*index)++];
 
     if(i == maxInstructionLength)   /* If the current word is too long to be an instruction */

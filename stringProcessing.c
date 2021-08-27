@@ -13,7 +13,7 @@ bool isAlphanumeric(const char *symbol)
     for(i = 0; i < symbolLength; i++)
     {
         if(!isalpha(symbol[i]) && !isdigit(symbol[i]))
-            return FALSE;
+			return FALSE;
     }
     return  TRUE;
 }

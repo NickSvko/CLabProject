@@ -25,9 +25,10 @@ void scanDirectiveName(const char *lineContent, char *directiveName, int *conten
 bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex)
 {
     bool directiveDefinition = FALSE;
-    int i = (*contentIndex);
+    int i;
 
     skipSpaces(lineContent, contentIndex); /* update contentIndex to the next char that is not ' ' or '\t' */
+	i = (*contentIndex);
 
     /* If the first char of the current word is '.' than it's a directive word declaration. */
     if (lineContent[i] == '.')
@@ -194,12 +195,11 @@ void checkAscizDirectiveLine(newLine *line, int contentIndex, int *numOfVariable
     /* Checks the validity on each character in the input line */
     for(; line -> content[contentIndex] != '\n' && currentState(line) == VALID; contentIndex++)
     {
-        if(line->content[contentIndex] == '"')
-        {
-            inQuotes = !inQuotes;
-            contentIndex++; /* Skips quotes character */
-        }
-        checkAscizCharValidity(line, contentIndex, numOfVariables, inQuotes);
+		if(line->content[contentIndex] == '\"')
+			inQuotes = !inQuotes;
+		else
+			checkAscizCharValidity(line, contentIndex, numOfVariables, inQuotes);
+
     }
     /* If the line ends with open quotes */
     if(currentState(line) == VALID && inQuotes && line->content[contentIndex] == '\n')
