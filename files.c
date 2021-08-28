@@ -30,8 +30,8 @@ state openFile(FILE** fileDescriptor, const char* fileName, char* mode)
 
 /*
  * Preserves the final values of instruction counter and data counter,
- * and updates in the symbol table the type of each symbol characterized as 'data',
- * and in the data image addresses of all the data, by adding the final type of the instruction counter to them.
+ * and updates in the symbol table the entryType of each symbol characterized as 'data',
+ * and in the data image addresses of all the data, by adding the final entryType of the instruction counter to them.
  */
 void updateValues(long* ICF, long* DCF, long IC, long DC, symbolTable symTab, dataTable dataTab)
 {
@@ -42,14 +42,14 @@ void updateValues(long* ICF, long* DCF, long IC, long DC, symbolTable symTab, da
 	*ICF = IC;
 	*DCF = DC;
 
-	/* Updates in the symbol table the type of each symbol characterized as 'data', by adding the ICF type */
+	/* Updates in the symbol table the entryType of each symbol characterized as 'data', by adding the ICF entryType */
 	for (symbolEntry = symTab; symbolEntry != NULL; symbolEntry = symbolEntry->next)
 	{
 		if (symbolEntry->type == data)
 			symbolEntry->value += (*ICF);
 	}
 
-	/* Updates in the data Image the addresses of all the data by adding the ICF type to each type */
+	/* Updates in the data Image the addresses of all the data by adding the ICF entryType to each entryType */
 	for (dataEntry = dataTab; dataEntry != NULL; dataEntry = dataEntry->next)
 		dataEntry->address += (*ICF);
 
@@ -81,8 +81,10 @@ state processFile(codeTable* codeImage, dataTable* dataImage, attributesTable* a
 /* returns file full name - including the extension */
 char* getFileFullName(char* fileName, char* fileExtension)
 {
-	char* fullName = callocWithCheck(strlen(fileName) + strlen(fileExtension) + 1);
-	strcpy(fullName, fileName);
+	char *fullName, *temp;
+	fullName = callocWithCheck(strlen(fileName) + strlen(fileExtension) + 1);
+	temp = strtok(fileName, "."); /* Copy the filename without the extension */
+	strcpy(fullName, temp);
 	strcat(fullName, fileExtension);
 	return fullName;
 }

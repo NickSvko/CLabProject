@@ -26,14 +26,15 @@ void checkAttributeValidity(newLine *line, imageType type, symbolTable table)
 bool labelIsDefined(char *label, newLine *line, symbolTable head, imageType type)
 {
     bool isDefined = FALSE;
-    symbolTable temp;
+    symbolTable current;
 
-    for (temp = head; temp != NULL ; temp = temp->next)
+    for (current = head; current != NULL ; current = current->next)
     {
-        if(strcmp(head->name, label) == 0)
+        if(strcmp(current->name, label) == 0)
         {
             isDefined = TRUE;
-            checkAttributeValidity(line, type, head);
+            checkAttributeValidity(line, type, current);
+			break;
         }
     }
     /* An attempt of adding 'entry' attribute to a label that doesn't exist */
@@ -77,16 +78,12 @@ state labelIsValid(newLine *line, char *label)
      * Does not exceed the maximum length of a label name, the first character is a letter,
      * contain only letters and numbers.
      */
-	printf("%s\n", label);
-	printf("is alpha: %d\n", isalpha(label[0]));
-	printf("label length: %lu\n ", strlen(label));
-	printf("is alpha numeric: %d\n",isAlphanumeric(label) );
     if(strlen(label) > maxLabelLength || isalpha(label[0]) == 0 || !isAlphanumeric(label))
-        line->error = addError("label's name syntactically incorrect");
+		line->error = addError("label's name syntactically incorrect");
 
-    /* Check if the label name is a reserved instruction or directive word */
-    else if(labelNameIsReservedWord(label))
-        line-> error = addError("Invalid label, the label name is a reserved instruction word");
+	/* Check if the label name is a reserved instruction or directive word */
+    if(labelNameIsReservedWord(label))
+		line-> error = addError("Invalid label, the label name is a reserved instruction word");
 
     return currentState(line);
 }

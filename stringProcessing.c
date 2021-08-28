@@ -42,7 +42,7 @@ state checkForComma(newLine *line, int *index, int numOfVariables)
 }
 
 /* Extracts the next integer in line, and checks its validation */
-void checkInteger(newLine *line, int *contentIndex, int *numOfVariables, int maxNumLength, int minVal, int maxVal)
+void checkInteger(newLine* line, int* contentIndex, int* numOfVariables, int maxNumLength, int maxVal, int minVal)
 {
     int numValue;
     char numString[maxNumLength + 2];
@@ -67,7 +67,7 @@ void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands)
         registerState = INVALID;
     else
     {
-        (*contentIndex)++; /* skips to the start of the register number */
+        (*contentIndex)++; /* skips to the start of the operand number */
         registerNum = scanInt(line->content, contentIndex, registerString, maxRegisterLength);
         if(!intIsValid(registerString, registerNum, maxRegister, minRegister))
             registerState = INVALID;
@@ -152,8 +152,8 @@ int scanInt(const char *content, int *contentIndex, char *numString, int maxLeng
     while(!isspace(content[*contentIndex]) && content[*contentIndex] != ',' && i <= maxLength)
         numString[i++] = (char)(content[(*contentIndex)++] + '\0');
 
-		numString[i] = '\0'; /* End of string */
-		numValue = atoi(numString);
+	numString[i] = '\0'; /* End of string */
+	numValue = atoi(numString);
 
 
     return numValue;

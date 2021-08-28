@@ -44,9 +44,10 @@ void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType 
 }
 
 /* Sets the values of a new data image entry */
-void setDataEntryValues(directiveType type, int numOfVars, long DC, void *dataArr, int sizeofVar, dataTable newEntry)
+void setDataEntryValues(directiveType type, int numOfVars, long DC, void* dataArr, int sizeofVar, dataTable newEntry)
 {
     newEntry -> entryType = type;
+	newEntry -> variableSize = sizeofVar;
     newEntry -> numOfVariables = numOfVars;
     newEntry -> data = dataArr;
     newEntry -> address = DC;
@@ -54,7 +55,7 @@ void setDataEntryValues(directiveType type, int numOfVars, long DC, void *dataAr
     newEntry -> next = NULL;
 }
 
-/* Return the size on a single variable - according to the directive type */
+/* Return the size on a single variable - according to the directive entryType */
 int getSizeOfDataVariable(directiveType type)
 {
     int sizeofVariable;
@@ -70,7 +71,7 @@ int getSizeOfDataVariable(directiveType type)
 }
 
 /* Adds a new entry to data image linked list */
-void addToDataImage(directiveType type, int numOfVariables, long *DC, void *dataArray, dataTable *table)
+void addToDataImage(directiveType type, int numOfVariables, long* DC, void* dataArray, dataTable* table)
 {
     int sizeofVariable;
     dataTable newEntry, tempEntry;
@@ -78,8 +79,8 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
     sizeofVariable = getSizeOfDataVariable(type);
     newEntry = callocWithCheck(sizeof(dataImageEntry));
 
-    setDataEntryValues(type, numOfVariables, *DC, dataArray, sizeofVariable, newEntry);
-    (*DC) += newEntry->dataSize;  /* Increases the type of DC according to the data obtained */
+	setDataEntryValues(type, numOfVariables, *DC, dataArray, sizeofVariable, newEntry);
+    (*DC) += newEntry->dataSize;  /* Increases the entryType of DC according to the data obtained */
 
     if((*table) == NULL)  /* If the table is empty */
         (*table) = newEntry;
@@ -91,7 +92,7 @@ void addToDataImage(directiveType type, int numOfVariables, long *DC, void *data
     }
 }
 
-/* Sets the binary representation of a type J instruction line */
+/* Sets the binary representation of a entryType J instruction line */
 void setJBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry)
 {
     newEntry -> data -> typeJ.opcode = (*instructionToken).opcode;
@@ -106,7 +107,7 @@ void setJBitField(const char *content, int *index, instructionWord *instructionT
         newEntry -> data -> typeJ.reg = 0;
 }
 
-/* Sets the binary representation of a type I instruction line */
+/* Sets the binary representation of a 'I' type instruction line */
 void setIBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry)
 {
     newEntry -> data -> typeI.opcode = (*instructionToken).opcode;
@@ -114,12 +115,14 @@ void setIBitField(const char *content, int *index, instructionWord *instructionT
 
     /* If it's a conditional branching instruction */
     if(!((*instructionToken).opcode >= 15 && (*instructionToken).opcode <= 18))
-        newEntry -> data -> typeI.immed = get2BytesInt(content, index);
-
+	{
+		(*index)++;  /* skips to the start of the next operand */
+		newEntry -> data -> typeI.immed = get2BytesInt(content, index);
+	}
     newEntry -> data -> typeI.rt = getRegister(content, index);
 }
 
-/* Sets the binary representation of a type R instruction line */
+/* Sets the binary representation of a entryType R instruction line */
 void setRBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry)
 {
     newEntry -> data -> typeR.unused = 0;
@@ -152,21 +155,24 @@ void setCodeEntryBitfield(const char *content, int index, instructionWord instru
 }
 
 /* Sets the values of a new code image entry */
-void setCodeEntryValues(const char *content, int index, instructionWord instructionToken, long IC, codeTable newEntry)
+void setCodeEntryValues(const char* content, int index, instructionWord instructionToken, long IC, codeTable newEntry,
+		long lineNumber)
 {
     setCodeEntryBitfield(content, index, instructionToken, newEntry);
+	newEntry ->lineNumber = lineNumber;
     newEntry -> address = (int)IC;
     newEntry -> type = instructionToken.type;
     newEntry -> next = NULL;
 }
 
 /* Adds a new entry to code image linked list */
-void addToCodeImage(const char *content, int index, instructionWord instructionToken, codeTable *table, long *IC)
+void addToCodeImage(const char* content, int index, instructionWord instructionToken, codeTable* table, long* IC,
+		long lineNumber)
 {
     codeTable newEntry, tempEntry;
 
     newEntry = callocWithCheck(sizeof(codeImageEntry));
-    setCodeEntryValues(content, index, instructionToken, *IC, newEntry);
+	setCodeEntryValues(content, index, instructionToken, *IC, newEntry, lineNumber);
     (*IC) += 4;
 
     if((*table) == NULL) /* If the table is empty */

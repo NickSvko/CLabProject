@@ -19,12 +19,12 @@ state lineSecondPass(newLine *line, symbolTable symbolTab, codeTable codeImage, 
         return VALID;
     skipLabelDefinition(line->content, &contentIndex);
     /* If it's an '.entry' directive line */
-    if(isDirective(line->content, directiveToken, &contentIndex) && strcmp(directiveToken->name, ".entry") == 0)
+    if(isDirective(line->content, directiveToken, &contentIndex) && strcmp(directiveToken->name, "entry") == 0)
         defineLabelAsEntry(line, symbolTab, &contentIndex, symbol);
     else  /* If it's not a directive line, then it's an instruction, proceeds to complete the binary encoding */
     {
         checkLineBinaryEncoding(line, symbolTab, codeImage, instructionToken, &label);
-        if(label->isExtern)   /* If the current label is external, adds it to the attributes table */
+        if(label && label->isExtern)   /* If the current label is external, adds it to the attributes table */
             addToAttributesTable(label->name, external, instructionToken->address, attributesTab);
     }
     free(directiveToken);

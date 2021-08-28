@@ -9,7 +9,7 @@ void scanDirectiveName(const char *lineContent, char *directiveName, int *conten
 bool isDirective(const char *lineContent, directiveWord *directiveToken, int *contentIndex);
 state searchDirective(newLine *line, directiveWord  *directiveToken);
 bool isDataStorageDirective(directiveType type);
-void enterVariableByType(directiveType type, const void *dataArray, int *arrayIndex, char *numString);
+void enterVariableByType(directiveType type, void * dataArray, int *arrayIndex, char *numString);
 void scanDVariableToArray(const char *content, int index, directiveType type, void *dataArray);
 void scanAscizVariableToArray(const char *content, int index, char *dataArray);
 void createDataArray(directiveType type, void **dataArray, int numOfVariables, const char *content, int index);

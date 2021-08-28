@@ -7,7 +7,7 @@
 #include "lineHandling.h"
 
 
-/* Returns the number and the list of all the reserved instructions, with their name, opcode, funct and type */
+/* Returns the number and the list of all the reserved instructions, with their name, opcode, funct and entryType */
 instructionWord *getReservedInstructions(int *numberOfInstructions)
 {
     const  unsigned int noFunct = -1;
@@ -82,7 +82,7 @@ state instructionWordState(newLine *line, instructionWord *instructionToken, int
     return currentState(line);
 }
 
-/* Checks J-type instruction syntax */
+/* Checks J-entryType instruction syntax */
 void checkJOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands)
 {
     /* If 'jump' instructions with register operand */
@@ -96,14 +96,14 @@ void checkJOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int 
     }
 }
 
-/* Checks I-type instruction syntax */
+/* Checks I-entryType instruction syntax */
 void checkIOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands)
 {
-    /* type 'I' copy instructions or type 'I'  loading and saving memory instructions */
+    /* entryType 'I' copy instructions or entryType 'I'  loading and saving memory instructions */
     if((opcode >= 10 && opcode <= 14) || (opcode >= 19 && opcode <= 24))
     {
         if((*numOfScannedOperands) == 1)    /* second operand in line must be an integer */
-            checkInteger(line, index, numOfScannedOperands, max2BytesIntLength, min2BytesIntVal, max2BytesIntVal);
+			checkInteger(line, index, numOfScannedOperands, max2BytesIntLength, max2BytesIntVal, min2BytesIntVal);
         else    /* The first and third operands in line must be registers */
             checkRegister(line, index, numOfScannedOperands);
     }
@@ -120,7 +120,7 @@ void checkIOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int 
     }
 }
 
-/* Checks the validation of an instruction operand - by the instruction type */
+/* Checks the validation of an instruction operand - by the instruction entryType */
 void checkOperandByType(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands)
 {
     if(opcode == 0 || opcode == 1)  /* Type 'R' instructions */
@@ -137,7 +137,7 @@ void checkOperandByType(newLine *line, unsigned int opcode, char *symbol, int *i
 void checkInstructionSyntax(newLine *line, unsigned int opcode, int contentIndex)
 {
     int numOfScannedOperands = 0;
-    char symbol[maxLabelLength + 1];
+    char symbol[maxLabelLength + 1] = {0};
 
     if(opcode == 63 && !emptyLine(line->content, contentIndex))  /* 'stop' instruction validity check */
         line->error = addError("Excessive text after 'stop' instruction");
@@ -147,11 +147,16 @@ void checkInstructionSyntax(newLine *line, unsigned int opcode, int contentIndex
         if(checkForComma(line,&contentIndex, numOfScannedOperands) == VALID)
             checkOperandByType(line, opcode, symbol, &contentIndex, &numOfScannedOperands);
 
+		skipSpaces(line->content, &contentIndex);
+
 		if(currentState(line) == VALID)
-			checkOperandsAmount(line, opcode, numOfScannedOperands, FALSE);
+		{
+			if(line->content[contentIndex] != '\n')
+				checkOperandsAmount(line, opcode, numOfScannedOperands, FALSE);
+			if(line->content[contentIndex] == '\n')
+				checkOperandsAmount(line, opcode, numOfScannedOperands, TRUE);
+		}
     }
-	if(currentState(line) == VALID)
-		checkOperandsAmount(line, opcode, numOfScannedOperands, TRUE);
 }
 
 /* Checks if the instruction line in valid, and returns its state - valid/invalid */
@@ -165,14 +170,14 @@ state instructionLineState(newLine *line, instructionWord instructionToken, int 
     else if (instructionToken.opcode != 63 && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
         line->error = addError("No spacing between the directive word and the first operand");
 
-    /* If no error was found, executing syntax and operands check for the instruction type */
+    /* If no error was found, executing syntax and operands check for the instruction entryType */
     else
         checkInstructionSyntax(line, instructionToken.opcode, contentIndex);
 
     return currentState(line);
 }
 
-/* gets the opcode and type of the instruction that appears in the current line */
+/* gets the opcode and entryType of the instruction that appears in the current line */
 void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken)
 {
     int i = 0;
@@ -183,39 +188,39 @@ void getInstruction(const char *content, int *contentIndex, instructionWord *ins
     while(!isWhiteSpace(content[*contentIndex]))
         instructionToken->name[i++] = content[(*contentIndex)++];
 
-    /* Finds the current instruction and save its opcode and type in the instructionToken */
+    /* Finds the current instruction and save its opcode and entryType in the instructionToken */
     searchInstruction(instructionToken);
 }
 
-/* Checks if the current type is valid according to the instruction type, and returns its state - valid/invalid */
+/* Checks if the current entryType is valid according to the instruction entryType, and returns its state - valid/invalid */
 state addressState(newLine *line, symbolTable label, instructionType type, long address)
 {
     if(type == I)
     {
-        if(label->isExtern)  /* label can't be defined as external in type 'I' instruction */
+        if(label->isExtern)  /* label can't be defined as external in entryType 'I' instruction */
             line->error = addError("Label can't be defined as external in a conditional branching instruction");
 
         else if(address < min2BytesIntVal || address > max2BytesIntVal)  /* Address must be in the 16-bit range */
-            line->error = addError("The label type is not in the correct range for type 'I' instruction");
+            line->error = addError("The label entryType is not in the correct range for entryType 'I' instruction");
     }
     /* Address must be in the 25-bit range */
     else if(type == J && (address < min25BitsIntVal || address > max25bitsIntVal))
-        line->error = addError("The label type is not in the correct range for type 'J' instruction");
+        line->error = addError("The label entryType is not in the correct range for entryType 'J' instruction");
 
     return currentState(line);
 }
 
-/* Calculates requested type according to the instruction type, and returns if the type in valid or not */
+/* Calculates requested entryType according to the instruction entryType, and returns if the entryType in valid or not */
 state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address)
 {
-    /* In 'I' type instruction, The 'immed' field contains the distance between the label and the instruction */
+    /* In 'I' entryType instruction, The 'immed' field contains the distance between the label and the instruction */
     if(type == I)
         (*address) = label->value - instructionAddress;
 
-    /* In 'J' type instruction, the 'distance' represent the required label's type */
+    /* In 'J' entryType instruction, the 'distance' represent the required label's entryType */
     else if(type == J)
     {
-        if(label->isExtern)  /* If label set as external, labels type unknown */
+        if(label->isExtern)  /* If label set as external, labels entryType unknown */
             (*address) = 0;
         else
             (*address) = label->value;
@@ -233,11 +238,11 @@ void processInstruction(newLine *line, int *index, bool labelSet , char *label, 
             addToSymbolTable(symTab, label, *IC, code);
 
         if(currentState(line) == VALID && instructionLineState(line, instructionToken, *index) == VALID)
-            addToCodeImage(line->content, *index, instructionToken, cImage, IC);
+			addToCodeImage(line->content, *index, instructionToken, cImage, IC, line->number);
     }
 }
 
-/* Checks if the current instruction is type 'I' or 'J' instructions with label operand */
+/* Checks if the current instruction is entryType 'I' or 'J' instructions with label operand */
 bool instructionWithLabelOperand(newLine *line, int index, unsigned int opcode)
 {
     if((opcode >= 15 && opcode <= 18) || (opcode >= 30 && opcode <= 32) && !(opcode == 30 && isRegister(line->content, index)))
