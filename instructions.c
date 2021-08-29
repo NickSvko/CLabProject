@@ -7,7 +7,7 @@
 #include "lineHandling.h"
 
 
-/* Returns the number and the list of all the reserved instructions, with their name, opcode, funct and entryType */
+/* Returns the number and the list of all the reserved instructions, with their name, opcode, funct and dataType */
 instructionWord *getReservedInstructions(int *numberOfInstructions)
 {
     const  unsigned int noFunct = -1;
@@ -82,7 +82,7 @@ state instructionWordState(newLine *line, instructionWord *instructionToken, int
     return currentState(line);
 }
 
-/* Checks J-entryType instruction syntax */
+/* Checks J-dataType instruction syntax */
 void checkJOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands)
 {
     /* If 'jump' instructions with register operand */
@@ -96,10 +96,10 @@ void checkJOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int 
     }
 }
 
-/* Checks I-entryType instruction syntax */
+/* Checks I-dataType instruction syntax */
 void checkIOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands)
 {
-    /* entryType 'I' copy instructions or entryType 'I'  loading and saving memory instructions */
+    /* dataType 'I' copy instructions or dataType 'I'  loading and saving memory instructions */
     if((opcode >= 10 && opcode <= 14) || (opcode >= 19 && opcode <= 24))
     {
         if((*numOfScannedOperands) == 1)    /* second operand in line must be an integer */
@@ -120,7 +120,7 @@ void checkIOperandsSyntax(newLine *line, unsigned int opcode, char *symbol, int 
     }
 }
 
-/* Checks the validation of an instruction operand - by the instruction entryType */
+/* Checks the validation of an instruction operand - by the instruction dataType */
 void checkOperandByType(newLine *line, unsigned int opcode, char *symbol, int *index, int *numOfScannedOperands)
 {
     if(opcode == 0 || opcode == 1)  /* Type 'R' instructions */
@@ -170,14 +170,14 @@ state instructionLineState(newLine *line, instructionWord instructionToken, int 
     else if (instructionToken.opcode != 63 && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
         line->error = addError("No spacing between the directive word and the first operand");
 
-    /* If no error was found, executing syntax and operands check for the instruction entryType */
+    /* If no error was found, executing syntax and operands check for the instruction dataType */
     else
         checkInstructionSyntax(line, instructionToken.opcode, contentIndex);
 
     return currentState(line);
 }
 
-/* gets the opcode and entryType of the instruction that appears in the current line */
+/* gets the opcode and dataType of the instruction that appears in the current line */
 void getInstruction(const char *content, int *contentIndex, instructionWord *instructionToken)
 {
     int i = 0;
@@ -188,39 +188,39 @@ void getInstruction(const char *content, int *contentIndex, instructionWord *ins
     while(!isWhiteSpace(content[*contentIndex]))
         instructionToken->name[i++] = content[(*contentIndex)++];
 
-    /* Finds the current instruction and save its opcode and entryType in the instructionToken */
+    /* Finds the current instruction and save its opcode and dataType in the instructionToken */
     searchInstruction(instructionToken);
 }
 
-/* Checks if the current entryType is valid according to the instruction entryType, and returns its state - valid/invalid */
+/* Checks if the current dataType is valid according to the instruction dataType, and returns its state - valid/invalid */
 state addressState(newLine *line, symbolTable label, instructionType type, long address)
 {
     if(type == I)
     {
-        if(label->isExtern)  /* label can't be defined as external in entryType 'I' instruction */
+        if(label->isExtern)  /* label can't be defined as external in dataType 'I' instruction */
             line->error = addError("Label can't be defined as external in a conditional branching instruction");
 
         else if(address < min2BytesIntVal || address > max2BytesIntVal)  /* Address must be in the 16-bit range */
-            line->error = addError("The label entryType is not in the correct range for entryType 'I' instruction");
+            line->error = addError("The label dataType is not in the correct range for dataType 'I' instruction");
     }
     /* Address must be in the 25-bit range */
     else if(type == J && (address < min25BitsIntVal || address > max25bitsIntVal))
-        line->error = addError("The label entryType is not in the correct range for entryType 'J' instruction");
+        line->error = addError("The label dataType is not in the correct range for dataType 'J' instruction");
 
     return currentState(line);
 }
 
-/* Calculates requested entryType according to the instruction entryType, and returns if the entryType in valid or not */
+/* Calculates requested dataType according to the instruction dataType, and returns if the dataType in valid or not */
 state getAddress(newLine *line, long instructionAddress, symbolTable label, instructionType type, long *address)
 {
-    /* In 'I' entryType instruction, The 'immed' field contains the distance between the label and the instruction */
+    /* In 'I' dataType instruction, The 'immed' field contains the distance between the label and the instruction */
     if(type == I)
         (*address) = label->value - instructionAddress;
 
-    /* In 'J' entryType instruction, the 'distance' represent the required label's entryType */
+    /* In 'J' dataType instruction, the 'distance' represent the required label's dataType */
     else if(type == J)
     {
-        if(label->isExtern)  /* If label set as external, labels entryType unknown */
+        if(label->isExtern)  /* If label set as external, labels dataType unknown */
             (*address) = 0;
         else
             (*address) = label->value;
@@ -228,7 +228,7 @@ state getAddress(newLine *line, long instructionAddress, symbolTable label, inst
     return addressState(line, label, type, *address);
 }
 
-/* Adds the required data of a valid instruction line to  the symbol table or/and to  the code image */
+/* Adds the required data of a valid instruction line to  the symbol table or/and to the code image */
 void processInstruction(newLine *line, int *index, bool labelSet , char *label, symbolTable *symTab, codeTable *cImage, long *IC)
 {
     instructionWord instructionToken;
@@ -242,7 +242,7 @@ void processInstruction(newLine *line, int *index, bool labelSet , char *label, 
     }
 }
 
-/* Checks if the current instruction is entryType 'I' or 'J' instructions with label operand */
+/* Checks if the current instruction is dataType 'I' or 'J' instructions with label operand */
 bool instructionWithLabelOperand(newLine *line, int index, unsigned int opcode)
 {
     if((opcode >= 15 && opcode <= 18) || (opcode >= 30 && opcode <= 32) && !(opcode == 30 && isRegister(line->content, index)))

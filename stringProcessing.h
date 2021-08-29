@@ -8,7 +8,7 @@ bool isAlphanumeric(const char *symbol);
 state checkForComma(newLine *line, int *index, int numOfVariables);
 void checkInteger(newLine* line, int* contentIndex, int* numOfVariables, int maxNumLength, int maxVal, int minVal);
 void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands);
-void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfOperands, bool endOfScan);
+void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfScannedOperands, bool endOfScan);
 int getRegister(const char *content, int *index);
 int get2BytesInt(const char *content, int *index);
 bool isRegister(const char *content, int index);

@@ -79,13 +79,13 @@ void checkRegister(newLine *line, int *contentIndex, int *numOfScannedOperands)
 }
 
 /* checks if the amount of operands is bigger than the valid amount for the given instruction, if so, adds an error */
-void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfOperands, bool endOfScan)
+void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfScannedOperands, bool endOfScan)
 {
 	bool threeOperandsError, twoOperandsError, oneOperandError;
 
-	threeOperandsError = (!endOfScan && numOfOperands > 3) || (endOfScan && numOfOperands < 3);
-	twoOperandsError = (!endOfScan && numOfOperands > 2) || (endOfScan && numOfOperands < 2);
-	oneOperandError = (!endOfScan && numOfOperands > 1) || (endOfScan && numOfOperands < 1);
+	threeOperandsError = (!endOfScan && numOfScannedOperands > 3) || (endOfScan && numOfScannedOperands < 3);
+	twoOperandsError = (!endOfScan && numOfScannedOperands > 2) || (endOfScan && numOfScannedOperands < 2);
+	oneOperandError = (!endOfScan && numOfScannedOperands > 1) || (endOfScan && numOfScannedOperands < 1);
 
     if(opcode == 0 && threeOperandsError)
         line->error = addError("Incorrect number of registers.'R' arithmetic and logical instructions should receive 3 registers");

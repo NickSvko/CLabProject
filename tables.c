@@ -46,7 +46,7 @@ void addToSymbolTable(symbolTable *table, char *symbol, long address, imageType 
 /* Sets the values of a new data image entry */
 void setDataEntryValues(directiveType type, int numOfVars, long DC, void* dataArr, int sizeofVar, dataTable newEntry)
 {
-    newEntry -> entryType = type;
+    newEntry -> dataType = type;
 	newEntry -> variableSize = sizeofVar;
     newEntry -> numOfVariables = numOfVars;
     newEntry -> data = dataArr;
@@ -55,17 +55,17 @@ void setDataEntryValues(directiveType type, int numOfVars, long DC, void* dataAr
     newEntry -> next = NULL;
 }
 
-/* Return the size on a single variable - according to the directive entryType */
+/* Return the size on a single variable - according to the directive dataType */
 int getSizeOfDataVariable(directiveType type)
 {
     int sizeofVariable;
 
-    if(type == DB || type == ASCIZ)
+    if(type == DB || type == ASCIZ) /* '.db' / '.asciz' receives 1 byte variables */
         sizeofVariable = sizeof(char);
     if(type == DH)
-        sizeofVariable = sizeof(short);
+        sizeofVariable = sizeof(short); /* '.dh' receives 2 bytes variables */
     if(type == DW)
-        sizeofVariable = sizeof(int);
+        sizeofVariable = sizeof(int); /* '.dw' receives 4 bytes variables */
 
     return sizeofVariable;
 }
@@ -80,19 +80,19 @@ void addToDataImage(directiveType type, int numOfVariables, long* DC, void* data
     newEntry = callocWithCheck(sizeof(dataImageEntry));
 
 	setDataEntryValues(type, numOfVariables, *DC, dataArray, sizeofVariable, newEntry);
-    (*DC) += newEntry->dataSize;  /* Increases the entryType of DC according to the data obtained */
+    (*DC) += newEntry->dataSize;  /* Increases the dataType of DC according to the size of the obtained data */
 
     if((*table) == NULL)  /* If the table is empty */
         (*table) = newEntry;
 
-    else  /* Defines the new node to be the last */
+    else  /* Defines the new entry to be the last in the list */
     {
         for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
         tempEntry -> next = newEntry;
     }
 }
 
-/* Sets the binary representation of a entryType J instruction line */
+/* Sets the binary representation of a dataType J instruction line */
 void setJBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry)
 {
     newEntry -> data -> typeJ.opcode = (*instructionToken).opcode;
@@ -122,7 +122,7 @@ void setIBitField(const char *content, int *index, instructionWord *instructionT
     newEntry -> data -> typeI.rt = getRegister(content, index);
 }
 
-/* Sets the binary representation of a entryType R instruction line */
+/* Sets the binary representation of a dataType R instruction line */
 void setRBitField(const char *content, int *index, instructionWord *instructionToken, codeTable newEntry)
 {
     newEntry -> data -> typeR.unused = 0;
@@ -179,7 +179,7 @@ void addToCodeImage(const char* content, int index, instructionWord instructionT
         (*table) = newEntry;
     else
     {
-        /* Defines the new node to be the last */
+        /* Defines the new entry to be the last in the list */
         for(tempEntry = (*table); tempEntry -> next != NULL; tempEntry = tempEntry -> next);
         tempEntry -> next = newEntry;
     }
@@ -248,14 +248,14 @@ void freeTables(codeTable codeHead, dataTable dataHead, attributesTable attribut
     dataTable dataImageTemp;
     attributesTable attributesTemp;
 
-    while(codeHead != NULL)  /* Free code image*/
+    while(codeHead != NULL)  /* Free code image */
     {
         codeImageTemp = codeHead->next;
         free(codeHead->data);
         free(codeHead);
         codeHead = codeImageTemp;
     }
-    while(dataHead != NULL)  /* Free data image*/
+    while(dataHead != NULL)  /* Free data image */
     {
         dataImageTemp = dataHead->next;
         free(dataHead);

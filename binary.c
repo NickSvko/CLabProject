@@ -1,8 +1,8 @@
 
-#include "instructions.h" /* For 'getInstruction', 'instructionWithLabelOperand' functions*/
-#include "labels.h" /* For 'extractLabelFromLine', 'extractLabelFromLine' functions */
+#include "instructions.h"
+#include "labels.h"
 
-/* Completes the binary encoding of the current line, depending on the entryType of instruction that appears in that line */
+/* Completes the binary encoding of the current line, depending on the dataType of instruction that appears in that line */
 void completeLineBinaryEncoding(symbolTable label, codeTable table, instructionWord *instructionToken, newLine *line)
 {
 	long address;
@@ -11,11 +11,11 @@ void completeLineBinaryEncoding(symbolTable label, codeTable table, instructionW
 	/* Finds from the code table the instruction line in which the binary coding should be completed  */
 	for(currentEntry = table; currentEntry->lineNumber != line->number; currentEntry = currentEntry->next){};
 
-	/* If 'J' entryType instruction, Saves the instruction address, we'll need it later if the current label is extern */
+	/* If 'J' dataType instruction, Saves the instruction address, we'll need it later if the current label is extern */
 	if(currentEntry->type == J)
 		instructionToken->address = currentEntry->address;
 
-	/* If the entryType to be set in the 'address' field is valid  */
+	/* If the dataType to be set in the 'address' field is valid  */
 	if(getAddress(line, currentEntry->address, label, currentEntry->type, &address) == VALID)
 	{
 		if(currentEntry->type == J)
@@ -26,7 +26,7 @@ void completeLineBinaryEncoding(symbolTable label, codeTable table, instructionW
 }
 
 /*
- * Checks if the current line represents entryType 'I'/'J' instructions with label operand,
+ * Checks if the current line represents dataType 'I'/'J' instructions with label operand,
  * if so, Completes line binary encoding.
  */
 void checkLineBinaryEncoding(newLine *line, symbolTable symTable, codeTable cTable, instructionWord *instructionToken, symbolTable *label)
@@ -38,7 +38,7 @@ void checkLineBinaryEncoding(newLine *line, symbolTable symTable, codeTable cTab
     /* get the instruction that appears in the current line */
     getInstruction(line->content, &contentIndex, instructionToken);
     opcode = instructionToken->opcode;
-    /* If the current instruction is entryType 'I' or 'J' instructions with label operand */
+    /* If the current instruction is dataType 'I' or 'J' instructions with label operand */
     if(instructionWithLabelOperand(line, contentIndex, opcode))
     {
         /* Finds and extracts the label name that appears in the current line */

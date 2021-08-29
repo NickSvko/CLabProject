@@ -3,127 +3,19 @@
 #include "files.h" /* For 'getFileFullName', 'openFile' functions and <stdio.h> functions */
 #include "tables.h" /* For 'freeTables' function */
 
-///* Returns if the last byte of the variable is the only byte that left to be printed */
-//bool lastByteLeftToPrint(directiveType entryType,int readBytes)
-//{
-//    if(entryType == DB || entryType == ASCIZ || (entryType == DH && readBytes == 1) || (entryType == DW && readBytes == 3))
-//        return TRUE;
-//    return FALSE;
-//}
-//
-///* Obtains the current variable and updates the number of printed bytes and(if needed) the variable index */
-//void getDataVariable(dataTable currentEntry, int *bytesReadFromVariable, int *arrayIndex, void **currentVariable)
-//{
-//    *currentVariable = &(currentEntry->data[*arrayIndex]);
-//
-//    /*
-//     * If the current byte is the last byte left for printing from the current variable,
-//     * resets the number of bytes printed and advances to the next variable.
-//     */
-//    if(lastByteLeftToPrint(currentEntry->entryType, *bytesReadFromVariable) == TRUE)
-//    {
-//        *bytesReadFromVariable = 0;
-//        (*arrayIndex)++;
-//    }
-//    else
-//        (*bytesReadFromVariable)++;
-//}
-//
-///* Prints bytes of '.dw' directive variables to object file, depending on the number of bytes that already read */
-//void printDWByte(void *currentVariable, int bytesReadFromVariable, FILE *fileDescriptor)
-//{
-//    /* If we need to print the 0-8 bits of the variable */
-//    if(bytesReadFromVariable == 0)
-//        fprintf(fileDescriptor,"%02X ", (*(int *)currentVariable) & 0xFF);
-//    /* If we need to print the 8-16 bits of the variable */
-//    if(bytesReadFromVariable == 1)
-//        fprintf(fileDescriptor,"%02X ", (*(int *)currentVariable) >> 8 & 0xFF);
-//    /* If we need to print the 16-24 bits of the variable */
-//    if(bytesReadFromVariable == 2)
-//        fprintf(fileDescriptor,"%02X ", (*(int *)currentVariable) >> 16 & 0xFF);
-//    /* If we need to print the 24-32 bits of the variable */
-//    if(bytesReadFromVariable == 3)
-//        fprintf(fileDescriptor,"%02X ", (*(int *)currentVariable) >> 24 & 0xFF);
-//}
-//
-///* Prints byte of '.dh' directive variables to object file, depending on the number of bytes that already read */
-//void printDHByte(void *currentVariable, int bytesReadFromVariable, FILE *fileDescriptor)
-//{
-//    /* If we need to print the 0-8 bits of the variable */
-//    if(bytesReadFromVariable == 1)
-//        fprintf(fileDescriptor,"%02X ", (*(short *)currentVariable) & 0xFF);
-//    /* If we need to print the 8-16 bits of the variable */
-//    else
-//        fprintf(fileDescriptor,"%02X ", (*(short *)currentVariable) >> 8 & 0xFF);
-//}
-//
-///* Selects the data print function according to the entryType of the directive */
-//void printByteOfType(directiveType entryType, void *currentVariable, int bytesReadFromVariable, FILE *fileDescriptor)
-//{
-//    /* In the '.asciz'/'.db' directive, each variable  is one byte size, so it prints the variable */
-//    if(entryType == DB || entryType == ASCIZ)
-//        fprintf(fileDescriptor,"%02X ", (*(char *)currentVariable) & 0xFF);
-//
-//    else if(entryType == DH)
-//        printDHByte(currentVariable, bytesReadFromVariable, fileDescriptor);
-//
-//    else if(entryType == DW)
-//        printDWByte(currentVariable, bytesReadFromVariable, fileDescriptor);
-//}
-//
-///*
-// * When exporting to the object file, check if it's necessary to start a new line,
-// * if so, drops a line, prints the new line address, and updates the address.
-// */
-//void startNewLineIfNeeded(int numOfPrintedBytes, long *startingAddress, FILE *fileDescriptor )
-//{
-//    /* Starts a new line every time 4 bytes are printed */
-//    if(numOfPrintedBytes % 4 == 0)
-//    {
-//        /* Every new line, first, prints the new line address */
-//        fprintf(fileDescriptor,"\n%04lu ", *startingAddress);
-//        /* Increases the current address by 4 - As the size of the number of bytes that were printed */
-//        (*startingAddress) += 4;
-//    }
-//}
-//
-///* Exports the data image to the object file */
-//void exportDataImage(dataTable dataImage, FILE *fileDescriptor, long startingAddress)
-//{
-//    dataTable dataEntry;
-//    int numOfPrintedBytes = 0, arrayIndex = 0, bytesReadFromVariable = 0;
-//    void *currentVariable;
-//
-//    fprintf(fileDescriptor,"%04lu ", startingAddress); /* First prints the starting address of the data image */
-//
-//    for(dataEntry = dataImage; dataEntry != NULL; dataEntry = dataEntry->next)
-//    {
-//        while(arrayIndex < dataEntry->numOfVariables)
-//        {
-//            numOfPrintedBytes++;
-//            getDataVariable(dataEntry,&bytesReadFromVariable,&arrayIndex, &currentVariable);
-//            printByteOfType(dataEntry->entryType, currentVariable, bytesReadFromVariable, fileDescriptor);
-//            startNewLineIfNeeded(numOfPrintedBytes, &startingAddress, fileDescriptor);
-//        }
-//        /* Resets the array index after printing all the variables of the data array of the current data image entry */
-//        arrayIndex = 0;
-//    }
-//}
-
-
 /* Exports bytes of '.dw' directive variables to object file, depending on the number of bytes that already read */
 void exportDWByte(void* currentVariable, int printedVariableBytes, FILE* fileDescriptor)
 {
-	/* If we need to print the 0-8 bits of the variable */
+	/* If we need to print the 0-7 bits of the variable */
 	if(printedVariableBytes == 0)
 		fprintf(fileDescriptor,"%02X ", ((*(int *)currentVariable)) & 0xFF);
-	/* If we need to print the 8-16 bits of the variable */
+	/* If we need to print the 8-15 bits of the variable */
 	else if(printedVariableBytes == 1)
 		fprintf(fileDescriptor,"%02X ", ((*(int *)currentVariable) >> 8) & 0xFF);
-	/* If we need to print the 16-24 bits of the variable */
+	/* If we need to print the 16-23 bits of the variable */
 	else if(printedVariableBytes == 2)
-		fprintf(fileDescriptor,"%02X ", ((*(int *)currentVariable) >> 16) & 0xFF);
-	/* If we need to print the 24-32 bits of the variable */
+		fprintf(fileDescriptor,"%02X ", ((*( int *)currentVariable) >> 16) & 0xFF);
+	/* If we need to print the 23-31 bits of the variable */
 	else if(printedVariableBytes == 3)
 		fprintf(fileDescriptor,"%02X ", ((*(int *)currentVariable) >> 24) & 0xFF);
 }
@@ -131,35 +23,42 @@ void exportDWByte(void* currentVariable, int printedVariableBytes, FILE* fileDes
 /* Exports byte of '.dh' directive variables to object file, depending on the number of bytes that already read */
 void exportDHByte(void* currentVariable, int printedVariableBytes, FILE* fileDescriptor)
 {
-	/* If we need to print the 0-8 bits of the variable */
+	/* If we need to print the 0-7 bits of the variable */
 	if(printedVariableBytes == 0)
 		fprintf(fileDescriptor,"%02X ", (*(short *)currentVariable) & 0xFF);
 
-	/* If we need to print the 8-16 bits of the variable */
+	/* If we need to print the 8-15 bits of the variable */
 	if(printedVariableBytes == 1)
 		fprintf(fileDescriptor,"%02X ", ((*(short *)currentVariable) >> 8) & 0xFF);
 }
 
-/* Selects the data export function according to the directive */
+/* Selects the function to export the current byte based on the directive type */
 void exportDataByteByType(dataTable currentEntry, int printedVariableBytes, int currentIndex, FILE *fileDescriptor)
 {
-	void *currentVariable;
-	currentVariable = &(currentEntry->data[currentIndex]);
+	void *currentVariable; /* A pointer to the current variable from the data that needs to be exported */
 
-	if(currentEntry->entryType == DB || currentEntry->entryType == ASCIZ)
+	/* The address on which the 'currentVariable' points depends on the type of directive */
+	if(currentEntry->dataType == DB || currentEntry->dataType == ASCIZ)
+	{
+		currentVariable = &((char *)currentEntry->data)[currentIndex];
 		fprintf(fileDescriptor,"%02X ", (*(char *)currentVariable) & 0xFF);
-
-	else if(currentEntry->entryType == DH)
+	}
+	else if(currentEntry->dataType == DH)
+	{
+		currentVariable = &((short *)currentEntry->data)[currentIndex];
 		exportDHByte(currentVariable, printedVariableBytes, fileDescriptor);
-
-	else if(currentEntry->entryType == DW)
+	}
+	else if(currentEntry->dataType == DW)
+	{
+		currentVariable = &((int *)currentEntry->data)[currentIndex];
 		exportDWByte(currentVariable, printedVariableBytes, fileDescriptor);
+	}
 }
 
-/* Exports a single variable from data image Entry to the object file. */
+/* Exports into the object file, a single variable from the data of an entry of data image */
 void exportDataVariable(dataTable currentEntry,long *currentAddress,int currentIndex,FILE *fileDescriptor, long *totalPrintedBytes)
 {
-	int printedVariableBytes = 0;
+	int printedVariableBytes = 0; /* The number of bytes printed from the current variable */
 
 	while(printedVariableBytes < currentEntry->variableSize)
 	{
@@ -198,24 +97,27 @@ void exportDataImage(dataTable dataImage, FILE *fileDescriptor, long startingAdd
 		exportDataEntry(currentEntry, &startingAddress, &totalPrintedBytes, fileDescriptor);
 }
 
-/* Exports the code image in a specific format to the object file, based on the entryType of instruction */
+/* Exports the code image in a specific format to the object file, based on the dataType of instruction */
 void exportCodeImage(codeTable codeImage, FILE *fd)
 {
-    unsigned int *word, b;
+	/* w - binary representation of the current node data from the code image */
+    unsigned int *w, b;
     codeTable codeEntry;
 
     b = 0xFF; /* hexadecimal representation for byte of 1's in binary */
 
     for(codeEntry = codeImage; codeEntry != NULL; codeEntry = codeEntry->next)
     {
+		/* In each type of instruction, a different bit field is filled */
         if(codeEntry->type == R)
-            word = (unsigned int *)&codeEntry->data->typeR;
+			w = (unsigned int *)&codeEntry->data->typeR;
         else if(codeEntry->type == I)
-            word = (unsigned int *)&codeEntry->data->typeI;
+			w = (unsigned int *)&codeEntry->data->typeI;
         else if(codeEntry->type == J)
-            word = (unsigned int *)&codeEntry->data->typeJ;
+			w = (unsigned int *)&codeEntry->data->typeJ;
 
-        fprintf(fd,"%04d %02X %02X %02X %02X\n",codeEntry->address,(*word)&b,(*word)>>8&b,(*word)>>16&b,(*word)>>24&b);
+		/* Print Format: 'address' '0-7 bits' '15-8 bits' '23-16 bits' '31-24 bits' */
+        fprintf(fd,"%04d %02X %02X %02X %02X\n",codeEntry->address, (*w) & b, (*w)>>8 & b, (*w)>>16 & b, (*w)>>24 & b);
     }
 }
 
@@ -236,9 +138,12 @@ void createObjectFile(char *fileName, codeTable codeImage, dataTable dataImage, 
     char *objectFileName;
 
     objectFileName = getFileFullName(fileName, ".ob");
-    if(openFile(&fileDescriptor, objectFileName, "w") == VALID)
+    if(openFile(&fileDescriptor, objectFileName, "w") == VALID) /* If succeeded to create the file */
     {
-        /* The first line shows the size of the instruction image, and the size of the data image */
+        /*
+         * The first line shows the size of the instruction image, and the size of the data image.
+         * The data image addresses start from 100, so the data image size is its last address minus 100
+         */
         fprintf(fileDescriptor, "%ld %ld\n", ICF - 100, DCF);
         exportCodeImage(codeImage, fileDescriptor);
         exportDataImage(dataImage, fileDescriptor, ICF);
@@ -261,6 +166,7 @@ void exportToExtAndEntFiles(attributesTable attributesTab, FILE *externFileDescr
 {
     attributesTable currentEntry;
 
+	/* Exports the current entry to the required file according to the type of the entry - external/entry */
     for(currentEntry = attributesTab; currentEntry != NULL; currentEntry = currentEntry->next)
     {
         if(currentEntry->type == external)
@@ -280,7 +186,7 @@ void createExtAndEntFiles(char *fileName, attributesTable attributesTab)
     char *externFileName, *entryFileName;
     state externOpen, entryOpen;
 
-    /* Obtains the names of the files to created and creates them */
+    /* Obtains the names of the files to be created and creates them */
     externFileName = getFileFullName(fileName, ".ext");
     entryFileName = getFileFullName(fileName, ".ent");
     externOpen = openFile(&externFileDescriptor, externFileName, "w");

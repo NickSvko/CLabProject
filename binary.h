@@ -2,9 +2,7 @@
 #ifndef UNTITLED_BINARY_H
 #define UNTITLED_BINARY_H
 
-#include "instructions.h"
-#include "lineHandling.h"
-#include "tables.h"
+#include "structs.h"
 
 /* Function prototypes */
 void checkLineBinaryEncoding(newLine *line, symbolTable symTable, codeTable cTable, instructionWord *instructionToken, symbolTable *label);

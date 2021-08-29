@@ -30,7 +30,7 @@ char *addError(char *error)
 void printLineError(newLine *line)
 {
     fprintf(stderr,"Error! file '%s' line %ld: %s.\n", line-> sourceFileName, line-> number, line-> error);
-    free(line->error);
+    free(line->error); /* After printing an error, it releases the memory allocated for the error */
 }
 
 /* Returns the current state of the line - valid/invalid */

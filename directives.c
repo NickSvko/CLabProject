@@ -1,13 +1,13 @@
 
-#include <string.h> /* For 'strcmp' function */
-#include <stdlib.h> /* For 'atoi' function */
-#include <ctype.h> /* For 'isspace', 'isprint' functions */
-#include "stringProcessing.h" /* For 'checkForComma', 'checkInteger' functions */
-#include "directives.h" /* For 'directive' table */
-#include "general.h" /* For 'isWhiteSpace', 'skipSpaces', 'addError', 'currentState', 'callocWithCheck' functions */
-#include "labels.h" /* For 'labelIsDefined', 'labelIsValid', 'getLabelName' functions*/
-#include "tables.h" /* For 'addToSymbolTable', 'addToDataImage' functions*/
-#include "lineHandling.h" /* For 'emptyLine' function*/
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include "stringProcessing.h"
+#include "directives.h"
+#include "general.h"
+#include "labels.h"
+#include "tables.h"
+#include "lineHandling.h"
 
 /* Scans the current directive word from the input line */
 void scanDirectiveName(const char *lineContent, char *directiveName, int *contentIndex)
@@ -41,7 +41,7 @@ bool isDirective(const char *lineContent, directiveWord *directiveToken, int *co
     return directiveDefinition;
 }
 
-/* Returns the number and the list of all the reserved directives, with their name, opcode, funct and entryType */
+/* Returns the number and the list of all the reserved directives, with their name, opcode, funct and dataType */
 directiveWord *getReservedDirectives(int *numberOfDirectives)
 {
     static directiveWord directive[7] =
@@ -61,7 +61,7 @@ directiveWord *getReservedDirectives(int *numberOfDirectives)
 
 /*
  * Checks if the current word matches to one of the available directive words,
- * if a match is found , saves the directive entryType and returns directive is valid, else, returns invalid.
+ * if a match is found , saves the directive dataType and returns directive is valid, else, returns invalid.
  */
 state searchDirective(newLine *line, directiveWord  *directiveToken)
 {
@@ -73,7 +73,7 @@ state searchDirective(newLine *line, directiveWord  *directiveToken)
     /* Searches for a match between the current word and one of the directives name */
     for(i = 0; i < numberOfDirectives; i++)
     {
-        /* if a match is found saves the matched directive entryType and stops */
+        /* if a match is found saves the matched directive dataType and stops */
         if(strcmp(directiveToken->name, directive[i].name) == 0)
         {
             directiveToken->type = directive[i].type;
@@ -94,7 +94,7 @@ bool isDataStorageDirective(directiveType type)
     return FALSE;
 }
 
-/* Inserting the current variable into the data array, the entryType of variable depends on the directive name  */
+/* Inserting the current variable into the data array, the dataType of variable depends on the directive name  */
 void enterVariableByType(directiveType type, void *dataArray, int *arrayIndex, char *numString)
 {
     int numValue;
@@ -163,8 +163,9 @@ void createDataArray(directiveType type, void **dataArray, int numOfVariables, c
     if(type == DH || type == DB || type == DW)
         scanDVariableToArray(content, index, type, *dataArray);
 
-     /* When it comes to '.asciz' directive,
-      * scanning the variable from the input line is different from the rest of the data storage directives
+     /*
+      * When it comes to '.asciz' directive,
+      * the way of scanning a variable from the input line is different from the rest of the data storage directives
       */
     else if(type == ASCIZ)
         scanAscizVariableToArray(content, index, *dataArray);
@@ -245,14 +246,14 @@ state dataStorageDirective(newLine *line, directiveType type, int index, int *nu
     if(emptyLine(line->content, index)) /* If there is no operands after the directive word. */
         line-> error = addError("Missing Operands.");
 
-    /* If there is no spacing between the directive word and the first operand. */
     else if (line->content[index] != ' ' && line->content[index] != '\t')
         line->error = addError("No spacing between the directive word and the first operand");
 
-    /* If no error was found, executing Specific check of syntax and operands for directive line entryType .dh/.dw/.db */
+    /* If no error was found, executing Specific check of syntax and operands for the directive the line represent */
     else
         checkDirectiveByType(line, type, index, numOfVariables);
 
+	/* If directive line is valid, Produces an array that contains the variables that appears in the line */
     if(currentState(line) == VALID)
         createDataArray(type, dataArray, *numOfVariables, line->content, index);
 
@@ -262,10 +263,10 @@ state dataStorageDirective(newLine *line, directiveType type, int index, int *nu
 /* Process an input line that represent data storage directive */
 void processDataStorageDirective(char *label, newLine *line, directiveType type, bool labelSet, int index, symbolTable *symTable, dataTable *dataImage, long *DC)
 {
-    int numOfDataVariables = 0;
+    int numOfDataVariables = 0; /* The number of variables the current directive accepts  */
     void *dataArray = NULL;
 
-    /* Checks if the line's syntax and operands are valid according to the directive entryType. */
+    /* Checks if the line syntax and operands are valid according to the directive dataType */
     if(dataStorageDirective(line, type, index, &numOfDataVariables, &dataArray) == VALID)
     {
         /* If there is a label in the start of the line that isn't defined, add it to the symbol table */

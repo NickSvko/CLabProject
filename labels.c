@@ -1,6 +1,6 @@
 
 #include <string.h>
-#include <ctype.h> /* For isalpha() */
+#include <ctype.h>
 #include "stringProcessing.h"
 #include "instructions.h"
 #include "directives.h"

@@ -17,7 +17,7 @@ typedef struct instructionWord
     unsigned int opcode;
     unsigned int funct;
     instructionType type;
-    /* The entryType of the instruction */
+    /* The dataType of the instruction */
     long address;
 } instructionWord;
 
@@ -27,7 +27,7 @@ typedef struct directiveWord
     directiveType type;
 } directiveWord;
 
-/* Representation of R-entryType instructionWord binary structure */
+/* Representation of R-dataType instructionWord binary structure */
 typedef struct typeRInstruction
 {
     /* Unused, bits: 5-0 */
@@ -44,10 +44,10 @@ typedef struct typeRInstruction
     unsigned int opcode: 6;
 } typeRInstruction;
 
-/* Representation of I-entryType instructionWord binary structure */
+/* Representation of I-dataType instructionWord binary structure */
 typedef struct typeIInstruction
 {
-    /* Fixed/immediate entryType, bits: 15-0 */
+    /* Fixed/immediate dataType, bits: 15-0 */
     signed int immed: 16;
     /* Second register, bits: 20-16 */
     unsigned int rt: 5;
@@ -57,10 +57,10 @@ typedef struct typeIInstruction
     unsigned int opcode: 6;
 } typeIInstruction;
 
-/* Representation of J-entryType instructionWord binary structure */
+/* Representation of J-dataType instructionWord binary structure */
 typedef struct typeJInstruction
 {
-    /* entryType, bits: 24-0 */
+    /* dataType, bits: 24-0 */
     unsigned int address: 25;
     /* reg, bit: 25 */
     unsigned int reg: 1;
@@ -68,7 +68,7 @@ typedef struct typeJInstruction
     unsigned int opcode: 6;
 } typeJInstruction;
 
-/* Bit fields that defined by instruction entryType */
+/* Bit fields that defined by instruction dataType */
 typedef union codeType
 {
     typeRInstruction typeR;
@@ -105,13 +105,15 @@ typedef struct dataImageEntry *dataTable;
 typedef struct dataImageEntry
 {
     long address;
-    directiveType entryType;
+    directiveType dataType;
+	/* The size of a single data variable in bytes */
 	int variableSize;
+	/* The number of variables stored in the data */
     unsigned int numOfVariables;
     /* The given data to store */
     void *data;
     /* The size of the current data in bytes */
-    unsigned int dataSize;
+    int dataSize;
     struct dataImageEntry *next;
 } dataImageEntry;
 
@@ -119,11 +121,11 @@ typedef struct attributesTableEntry *attributesTable;
 
 typedef struct attributesTableEntry
 {
-    /* Attribute entryType - entry/extern */
+    /* Attribute dataType - entry/extern */
     imageType type;
     /* The name of the label */
     char *name;
-    /* The entryType of the label(if entry) or of the instruction(if) extern */
+    /* The dataType of the label(if entry) or of the instruction(if) extern */
     long address;
     struct attributesTableEntry *next;
 } attributesTableEntry;
