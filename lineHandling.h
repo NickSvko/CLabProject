@@ -11,4 +11,4 @@ bool emptyLine(const char *lineContent, int currentIndex);
 bool commentLine(const char *lineContent, int *currentIndex);
 void printLineError(newLine *line);
 
-#endif //UNTITLED_LINEHANDLING_H
+#endif

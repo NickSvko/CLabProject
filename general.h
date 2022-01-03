@@ -12,4 +12,4 @@ state currentState(newLine *line);
 bool isWhiteSpace(char thisChar);
 void skipSpaces(const char *lineContent, int *lineIndex);
 
-#endif //UNTITLED_GENERAL_H
+#endif

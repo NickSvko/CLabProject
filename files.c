@@ -68,10 +68,12 @@ state processFile(codeTable* codeImage, dataTable* dataImage, attributesTable* a
 	{
 		updateValues(ICF, DCF, instructionCounter, dataCounter, symbolTab, *dataImage);
 		rewind(fd);  /* Starts from beginning of file again */
-
 		if (secondPass(line, symbolTab, *codeImage, attrTab, fd) == VALID)
 			fileState = VALID;
 	}
+
+
+
 	freeSymbolTable(symbolTab);
 	fclose(fd);
 	/* If the first pass and the second pass succeeded, returns file is valid, else returns file invalid */

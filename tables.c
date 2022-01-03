@@ -12,12 +12,14 @@ void setSymbolTableEntryValues(long address, imageType type, symbolTable newEntr
     newEntry -> value = address;
     newEntry -> next = NULL;
 
-    if(type == entry)  /* If you want to mark the label as 'entry' */
-        newEntry -> isEntry = TRUE;
+    if(type == entry) 	/* marks symbol table entry as 'entry' */
+		newEntry -> isEntry = TRUE;
 
-    else if(type == external)  /* If you want to mark the label as 'extern' */
-        newEntry -> isExtern = TRUE;
-
+    else if(type == external) /* marks symbol table entry as 'extern' */
+	{
+		newEntry -> isExternal = TRUE;
+		newEntry -> type = external;
+	}
     else
         newEntry -> type = type;
 }

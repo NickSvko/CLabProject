@@ -26,7 +26,7 @@ state lineSecondPass(newLine *line, symbolTable symbolTab, codeTable codeImage, 
     else  /* If it's not a directive line, then it's an instruction, proceeds to complete the binary encoding */
     {
         checkLineBinaryEncoding(line, symbolTab, codeImage, instructionToken, &label);
-        if(label && label->isExtern)   /* If the current label is external, adds it to the attributes table */
+        if(label && label->isExternal)   /* If the current label is external, adds it to the attributes table */
             addToAttributesTable(label->name, external, instructionToken->address, attributesTab);
     }
     free(directiveToken);

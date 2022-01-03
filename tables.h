@@ -26,4 +26,4 @@ void freeTables(codeTable codeHead, dataTable dataHead, attributesTable attribut
 
 
 
-#endif //UNTITLED_TABLES_H
+#endif

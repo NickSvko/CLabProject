@@ -21,5 +21,5 @@ bool instructionWithLabelOperand(newLine *line, int index, unsigned int opcode);
 instructionWord *getReservedInstructions(int *numberOfInstructions);
 
 
-#endif //UNTITLED_INSTRUCTIONS_H
+#endif
 

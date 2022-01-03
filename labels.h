@@ -16,4 +16,4 @@ void checkForLabelSetting(newLine *line, char *symbol, int *contentIndex, bool *
 void defineLabelAsEntry(newLine *line, symbolTable symbolTab, int *index, char *label);
 bool labelNameIsReservedWord(char *label);
 
-#endif //UNTITLED_LABELS_H
+#endif

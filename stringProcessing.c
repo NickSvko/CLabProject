@@ -50,7 +50,7 @@ void checkInteger(newLine* line, int* contentIndex, int* numOfVariables, int max
     numValue = scanInt(line->content, contentIndex, numString, maxNumLength);
 
     if(!intIsValid(numString, numValue, maxVal, minVal))
-        line->error = addError("Invalid operand, Operand must be an integer in the range defined by the command");
+        line->error = addError("Invalid operand, Operand must be an integer in the range defined by the instruction/directive");
     else
         (*numOfVariables)++;
 }
@@ -83,9 +83,9 @@ void checkOperandsAmount(newLine* line, unsigned int opcode, int numOfScannedOpe
 {
 	bool threeOperandsError, twoOperandsError, oneOperandError;
 
-	threeOperandsError = (!endOfScan && numOfScannedOperands > 3) || (endOfScan && numOfScannedOperands < 3);
-	twoOperandsError = (!endOfScan && numOfScannedOperands > 2) || (endOfScan && numOfScannedOperands < 2);
-	oneOperandError = (!endOfScan && numOfScannedOperands > 1) || (endOfScan && numOfScannedOperands < 1);
+	threeOperandsError = (!endOfScan && numOfScannedOperands > 3) || (endOfScan && numOfScannedOperands != 3);
+	twoOperandsError = (!endOfScan && numOfScannedOperands > 2) || (endOfScan && numOfScannedOperands != 2);
+	oneOperandError = (!endOfScan && numOfScannedOperands > 1) || (endOfScan && numOfScannedOperands != 1);
 
     if(opcode == 0 && threeOperandsError)
         line->error = addError("Incorrect number of registers.'R' arithmetic and logical instructions should receive 3 registers");

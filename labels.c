@@ -18,7 +18,7 @@ void checkAttributeValidity(newLine *line, imageType type, symbolTable table)
         else  /* An attempt to define label more the once */
             line->error = addError("Label is already defined");
     }
-    else if(table->isExtern && type != external)  /* An attempt to set an external label as a non-external */
+    else if(table->isExternal && type != external)  /* An attempt to set an external label as a non-external */
         line->error = addError("Label is already defined as external");
 }
 
@@ -26,14 +26,14 @@ void checkAttributeValidity(newLine *line, imageType type, symbolTable table)
 bool labelIsDefined(char *label, newLine *line, symbolTable head, imageType type)
 {
     bool isDefined = FALSE;
-    symbolTable current;
+    symbolTable currentSymbol;
 
-    for (current = head; current != NULL ; current = current->next)
+    for (currentSymbol = head; currentSymbol != NULL ; currentSymbol = currentSymbol->next)
     {
-        if(strcmp(current->name, label) == 0)
+        if(strcmp(currentSymbol->name, label) == 0)
         {
             isDefined = TRUE;
-            checkAttributeValidity(line, type, current);
+            checkAttributeValidity(line, type, currentSymbol);
 			break;
         }
     }
@@ -64,7 +64,7 @@ bool labelNameIsReservedWord(char *label)
     /* Looking for a match between the label name and one of the directives name */
     for(j = 0; j < numberOfDirectives && isReserved == FALSE; j++)
     {
-        if(strcmp(label, directive[i].name) == 0)
+        if(strcmp(label, directive[j].name) == 0)
             isReserved = TRUE;
     }
     return isReserved;
@@ -78,12 +78,14 @@ state labelIsValid(newLine *line, char *label)
      * Does not exceed the maximum length of a label name, the first character is a letter,
      * contain only letters and numbers.
      */
-    if(strlen(label) > maxLabelLength || isalpha(label[0]) == 0 || !isAlphanumeric(label))
-		line->error = addError("label's name syntactically incorrect");
+	if(strlen(label) > maxLabelLength)
+		line->error = addError("The label name is longer than 31 characters");
+	else if(isalpha(label[0]) == 0 || !isAlphanumeric(label))
+		line->error = addError("Invalid label, Syntactic error");
 
 	/* Check if the label name is a reserved instruction or directive word */
-    if(labelNameIsReservedWord(label))
-		line-> error = addError("Invalid label, the label name is a reserved instruction word");
+	else if(labelNameIsReservedWord(label))
+		line-> error = addError("Invalid label, the label name is a reserved instruction/directive word");
 
     return currentState(line);
 }
@@ -116,7 +118,7 @@ void getLabelName(const char *content, int *index, char *label)
     skipSpaces(content, index);
 
     /* Scans the label */
-    while(!isWhiteSpace(content[*index]))
+    while(!isWhiteSpace(content[*index]) && content[*index] != ',')
         label[i++] = content[(*index)++];
 
     label[i] = '\0'; /* End of string */

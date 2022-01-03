@@ -1,3 +1,8 @@
+/*
+ * Author: Nikita Savchenko
+ * Date of submission: 22.8.2021
+ * Description: Assembly compiler to machine code
+ */
 
 #include "files.h"
 #include "createOutputFiles.h"

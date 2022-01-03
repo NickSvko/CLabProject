@@ -183,7 +183,7 @@ void checkAscizCharValidity(newLine *line, int contentIndex, int *numOfVariables
 
     if(inQuotes)
     {
-        if(!isprint(line->content[contentIndex]) )   /* If char is in quotes and isn't printable. */
+        if(!isprint(line->content[contentIndex]))   /* If char is in quotes and isn't printable. */
             line->error = addError("String contain char that cannot be printed");
         else
             (*numOfVariables)++;
@@ -244,7 +244,7 @@ void checkDirectiveByType(newLine *line, directiveType type, int index, int *num
 state dataStorageDirective(newLine *line, directiveType type, int index, int *numOfVariables, void **dataArray)
 {
     if(emptyLine(line->content, index)) /* If there is no operands after the directive word. */
-        line-> error = addError("Missing Operands.");
+        line-> error = addError("Missing Operands");
 
     else if (line->content[index] != ' ' && line->content[index] != '\t')
         line->error = addError("No spacing between the directive word and the first operand");

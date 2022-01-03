@@ -164,11 +164,11 @@ state instructionLineState(newLine *line, instructionWord instructionToken, int 
 {
     /* If there is no operands after the instruction , and it's not 'stop' instruction */
     if(instructionToken.opcode != 63 && emptyLine(line->content, contentIndex))
-        line-> error = addError("Missing Operands.");
+        line-> error = addError("Missing Operands");
 
     /* If there is no spacing between the instruction and the first operand, and it's not 'stop' instruction */
     else if (instructionToken.opcode != 63 && line->content[contentIndex] != ' ' && line->content[contentIndex] != '\t')
-        line->error = addError("No spacing between the directive word and the first operand");
+        line->error = addError("No spacing between the instruction word and the first operand");
 
     /* If no error was found, executing syntax and operands check for the instruction dataType */
     else
@@ -192,20 +192,20 @@ void getInstruction(const char *content, int *contentIndex, instructionWord *ins
     searchInstruction(instructionToken);
 }
 
-/* Checks if the current dataType is valid according to the instruction dataType, and returns its state - valid/invalid */
+/* Checks if the current label is valid according to the instruction type, and returns its state - valid/invalid */
 state addressState(newLine *line, symbolTable label, instructionType type, long address)
 {
     if(type == I)
     {
-        if(label->isExtern)  /* label can't be defined as external in dataType 'I' instruction */
-            line->error = addError("Label can't be defined as external in a conditional branching instruction");
+        if(label->isExternal)  /* label can't be defined as external in type 'I' instruction */
+            line->error = addError("Label can't be defined as external in 'I' conditional branching instruction");
 
         else if(address < min2BytesIntVal || address > max2BytesIntVal)  /* Address must be in the 16-bit range */
-            line->error = addError("The label dataType is not in the correct range for dataType 'I' instruction");
+            line->error = addError("The label address isn't in the correct range for type 'I' instruction");
     }
     /* Address must be in the 25-bit range */
     else if(type == J && (address < min25BitsIntVal || address > max25bitsIntVal))
-        line->error = addError("The label dataType is not in the correct range for dataType 'J' instruction");
+        line->error = addError("The label address isn't in the correct range for type 'J' instruction");
 
     return currentState(line);
 }
@@ -220,7 +220,7 @@ state getAddress(newLine *line, long instructionAddress, symbolTable label, inst
     /* In 'J' dataType instruction, the 'distance' represent the required label's dataType */
     else if(type == J)
     {
-        if(label->isExtern)  /* If label set as external, labels dataType unknown */
+        if(label->isExternal)  /* If label set as external, labels dataType unknown */
             (*address) = 0;
         else
             (*address) = label->value;

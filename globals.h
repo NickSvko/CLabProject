@@ -13,8 +13,8 @@
 
 /* Characteristics of a signed integer consisting of one byte (including +/- sign) */
 #define max1ByteIntLength 4
-#define min1ByteIntVal (-127)
-#define max1ByteIntVal 128
+#define min1ByteIntVal (-128)
+#define max1ByteIntVal 127
 
 /* Characteristics of a signed integer consisting of two byte (including +/- sign) */
 #define max2BytesIntLength 6
@@ -41,20 +41,6 @@ typedef enum bool{FALSE,TRUE} bool;
 
 /* valid/invalid definition */
 typedef enum state{INVALID = 0, VALID = 1} state;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #endif

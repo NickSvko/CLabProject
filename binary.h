@@ -13,4 +13,4 @@ void completeLineBinaryEncoding(symbolTable label, codeTable table, instructionW
 
 
 
-#endif //UNTITLED_BINARY_H
+#endif

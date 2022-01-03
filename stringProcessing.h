@@ -18,4 +18,4 @@ bool intIsValid(char* numString, int numValue, int maxValue, int minValue);
 
 
 
-#endif //UNTITLED_UTILS_H
+#endif

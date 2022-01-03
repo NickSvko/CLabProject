@@ -23,7 +23,7 @@ typedef struct instructionWord
 
 typedef struct directiveWord
 {
-    char name[maxDirectiveName];
+	char name[maxDirectiveName];
     directiveType type;
 } directiveWord;
 
@@ -84,7 +84,7 @@ typedef struct symbolTableEntry
     long value;
     imageType type;
     bool isEntry;
-    bool isExtern;
+    bool isExternal;
     struct symbolTableEntry *next;
 } symbolTableEntry;
 
@@ -141,4 +141,4 @@ typedef struct line
     char *error;
 } newLine;
 
-#endif //UNTITLED_STRUCTS_H
+#endif

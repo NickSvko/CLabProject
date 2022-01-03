@@ -14,4 +14,4 @@ void updateValues(long *ICF, long *DCF, long IC, long DC, symbolTable symTab, da
 state processFile(codeTable *codeImage, dataTable *dataImage, attributesTable *attrTab, long *ICF, long *DCF, FILE *fd, newLine *line);
 
 
-#endif //UNTITLED_FILES_H
+#endif
